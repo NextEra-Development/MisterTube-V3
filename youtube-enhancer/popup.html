@@ -5,9 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>YouTube Enhancer</title>
     <link rel="stylesheet" href="popup_styles.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
 <body>
 <div class="container">
@@ -25,10 +22,9 @@
     <!-- Settings Panel (hidden by default) -->
     <div id="settings" class="feature-cards">
         <div class="feature-card subsComment">
-            <p class="feature-title">Subs Comment</p>
+            <p class="feature-title">Disable Comments</p>
             <label class="switch">
-                <input type="checkbox" class="feature-toggle" data-feature="subsComment" disabled>
-                <input type="checkbox" class="feature-toggle" data-feature="subsComment" disabled>
+                <input type="checkbox" class="feature-toggle" data-feature="subsComment">
                 <span class="slider"></span>
             </label>
         </div>
@@ -39,13 +35,6 @@
                 <span class="slider"></span>
             </label>
         </div>
-        <div class="feature-card shorts2long">
-            <p class="feature-title">Shortz 2.Long</p>
-            <label class="switch">
-                <input type="checkbox" class="feature-toggle" data-feature="shorts2long">
-                <span class="slider"></span>
-            </label>
-        </div>
         <div class="feature-card vid">
             <p class="feature-title">VidPlayz</p>
             <label class="switch">
@@ -53,11 +42,10 @@
                 <span class="slider"></span>
             </label>
         </div>
-        <div class="feature-card subsbutton">
-            <p class="feature-title">Sub Button</p>
+        <div class="feature-card thumbnails">
+            <p class="feature-title">Show video frames</p>
             <label class="switch">
-                <input type="checkbox" class="feature-toggle" data-feature="subsbutton" disabled>
-                <input type="checkbox" class="feature-toggle" data-feature="subsbutton" disabled>
+                <input type="checkbox" class="feature-toggle" data-feature="thumbnails">
                 <span class="slider"></span>
             </label>
         </div>

@@ -1,203 +1,140 @@
-// YouTube Enhancer - Subscription & Comments Feature
-        (function() {
-            'use strict';
+// features/subs-comment.js
+// Repurposed: "Disable Comments" — when ON, comments are removed as a whole;
+// when OFF (cleanup), they show again. Storage key stays `subsComment`.
+(function() {
+    'use strict';
 
-            // Configuration for subscription and comments features
-            const SELECTORS = {
-                COMMENTS_SECTION: 'ytd-comments#comments',
-                SUBSCRIPTION_BUTTON: 'ytd-subscribe-button-renderer',
-                COMMENTS_COUNT: 'ytd-comments-header-renderer #count',
-                PINNED_COMMENT: 'ytd-comment-thread-renderer[is-pinned]',
-                HEADER_AUTHOR: '#header-author',
-                COMMENT_COUNT_DISPLAY: '#comment-count-display'
-            };
+    const COMMENT_SELECTORS = [
+        'ytd-comments#comments',
+        '#comments',
+        'ytd-comments-header-renderer',
+        'ytd-comment-simplebox-renderer',
+        'ytd-engagement-panel-section-list-renderer[target-id="comments-panel"]'
+    ];
 
-            // Initialize the feature with proper error handling and context validation
-            function init() {
-                try {
-                    // Validate browser environment
-                    if (typeof window === 'undefined' || typeof document === 'undefined') {
-                        throw new Error('Invalid browser environment');
-                    }
+    let observer = null;
+    let hiddenNodes = new Set();
 
-                    // Validate Chrome API availability
-                    if (typeof chrome === 'undefined' || !chrome?.runtime?.id) {
-                        // Wait for Chrome APIs to be ready
-                        setTimeout(init, 100);
-                        return;
-                    }
-
-                    // Ensure we're in a valid extension context
-                    if (!chrome.runtime?.getManifest()) {
-                        throw new Error('Extension context invalid - unable to access manifest');
-                    }
-
-                    // Additional context validation
-                    if (window.location.protocol !== 'chrome-extension:' && 
-                        !window.location.href.startsWith('https://www.youtube.com')) {
-                        throw new Error('Invalid context - extension must run on YouTube or in extension context');
-                    }
-
-                    // Initialize feature settings
-                    chrome.runtime.sendMessage({ 
-                        action: 'getStorageData', 
-                        keys: ['extensionEnabled', 'commentEnhancementsEnabled'] 
-                    }, (result) => {
-                    // Add null check for result
-                    if (result && result.extensionEnabled === false) return;
-
-                    // Apply enhancements if enabled
-                    if (result?.commentEnhancementsEnabled !== false) {
-                        enhanceComments();
-                        addCommentCountDisplay();
-                    }
-
-                    enhanceSubscriptions();
-                    observeChanges();
-                    });
-                } catch (error) {
-                    console.error('YouTube Enhancer initialization failed:', error.message);
-                    return;
-                }
-            }
-
-            // Add comment count display
-            function addCommentCountDisplay() {
-                const headerAuthor = document.querySelector(SELECTORS.HEADER_AUTHOR);
-                if (!headerAuthor) return;
-
-                // Check if comment count display already exists
-                if (document.querySelector(SELECTORS.COMMENT_COUNT_DISPLAY)) return;
-
-                // Get comment count
-                const commentsCount = document.querySelector(SELECTORS.COMMENTS_COUNT);
-                if (!commentsCount) return;
-
-                // Create comment count display element
-                const commentCountDisplay = document.createElement('div');
-                commentCountDisplay.id = 'comment-count-display';
-                commentCountDisplay.className = 'youtube-enhancer-comment-count';
-                
-                // Format the count
-                const count = parseInt(commentsCount.textContent.replace(/[^0-9]/g, ''));
-                const formattedCount = formatNumber(count);
-                
-                // Set the content
-                commentCountDisplay.innerHTML = `
-                    <span class="comment-count-icon">💬</span>
-                    <span class="comment-count-text">${formattedCount} Comments</span>
-                `;
-
-                // Add to header author area
-                headerAuthor.appendChild(commentCountDisplay);
-
-    // Create subscriber count display element
-    const subscriberCountDisplay = document.createElement('div');
-    subscriberCountDisplay.className = 'youtube-enhancer-subscriber-count';
-    // Get subscriber count from YouTube's DOM
-    const subCountElement = document.querySelector('yt-formatted-string#subscriber-count');
-    if (subCountElement) {
-      const countText = subCountElement.textContent.replace(/[^0-9.]/g, '');
-      const formattedSubs = formatNumber(parseFloat(countText));
-      subscriberCountDisplay.innerHTML = `
-        <span class="sub-icon">👥</span>
-        <span class="sub-count">${formattedSubs} subs</span>
-      `;
-    } else {
-      subscriberCountDisplay.textContent = 'Subscribers: N/A';
+    // V2 visibility discipline: only hide nodes that are actually connected
+    // and visible, so lazy SPA mounts don't trigger off-screen work.
+    function isVisible(el) {
+        if (!el.isConnected) return false;
+        const rect = el.getBoundingClientRect();
+        if (!rect || rect.width === 0 || rect.height === 0) return false;
+        for (let node = el; node; node = node.parentElement) {
+            const cs = getComputedStyle(node);
+            if (cs.display === 'none' || cs.visibility === 'hidden' || cs.opacity === '0') return false;
+        }
+        return true;
     }
-    headerAuthor.appendChild(subscriberCountDisplay);
+
+    // V2 waitForElement: poll for a selector with a timeout (MutationObserver).
+    function waitForElement(selector, timeoutMs) {
+        return new Promise((resolve) => {
+            const existing = document.querySelector(selector);
+            if (existing) {
+                resolve(existing);
+                return;
             }
+            let settled = false;
+            const finish = (element) => {
+                if (settled) return;
+                settled = true;
+                poller.disconnect();
+                clearTimeout(timeout);
+                resolve(element);
+            };
+            const poller = new MutationObserver(() => {
+                const element = document.querySelector(selector);
+                if (element) finish(element);
+            });
+            const timeout = setTimeout(() => finish(null), timeoutMs);
+            poller.observe(document.documentElement, {
+                childList: true,
+                subtree: true
+            });
+        });
+    }
 
-            // Format number with K/M/B
-            function formatNumber(num) {
-                if (num >= 1000000000) {
-                    return (num / 1000000000).toFixed(1) + 'B';
-                }
-                if (num >= 1000000) {
-                    return (num / 1000000).toFixed(1) + 'M';
-                }
-                if (num >= 1000) {
-                    return (num / 1000).toFixed(1) + 'K';
-                }
-                return num.toString();
+    // Settings are injected by content.js into page context (window.youtubeEnhancerSettings);
+    // this script runs in page context and must not use chrome.* APIs.
+    function readSettings() {
+        return window.youtubeEnhancerSettings || { extensionEnabled: true, features: {} };
+    }
+
+    // Initialize the feature. Called by content.js via window.youtubeEnhancer.subsComment.init().
+    function init() {
+        if (typeof window === 'undefined' || typeof document === 'undefined') {
+            console.error('YouTube Enhancer: Invalid browser environment');
+            return cleanup;
+        }
+
+        const settings = readSettings();
+        if (settings.extensionEnabled === false) return cleanup;
+        if (settings.features && settings.features.subsComment === false) return cleanup;
+
+        // V2 setupUI pattern: wait (bounded) for the comments surface, then hide it.
+        // The MutationObserver covers surfaces that mount after the wait fires.
+        waitForElement('#comments', 15000).then(() => {
+            disableComments();
+            observeChanges();
+        });
+
+        return cleanup;
+    }
+
+    // Disable comments as a whole: hide every comment surface + the engage button region.
+    function disableComments() {
+        COMMENT_SELECTORS.forEach(sel => {
+            document.querySelectorAll(sel).forEach(el => {
+                if (!isVisible(el)) return; // V2 discipline: skip off-screen/hidden nodes
+                hiddenNodes.add(el);
+                el.style.setProperty('display', 'none', 'important');
+                el.style.setProperty('visibility', 'hidden', 'important');
+                el.style.setProperty('height', '0', 'important');
+                el.style.setProperty('margin', '0', 'important');
+                el.style.setProperty('padding', '0', 'important');
+            });
+        });
+    }
+
+    // Observe DOM changes so late-loaded comment surfaces also get hidden.
+    function observeChanges() {
+        observer = new MutationObserver(() => {
+            try {
+                disableComments();
+            } catch (error) {
+                console.error('YouTube Enhancer: Error processing mutations:', error);
             }
+        });
 
-            // Enhance comments section
-            function enhanceComments() {
-                // Apply styling to comments section
-                const commentsSection = document.querySelector(SELECTORS.COMMENTS_SECTION);
-                if (commentsSection) {
-                    commentsSection.classList.add('youtube-enhancer-comments');
+        if (document.body) {
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true
+            });
+        }
+    }
 
-                    // Highlight pinned comments
-                    const pinnedComment = document.querySelector(SELECTORS.PINNED_COMMENT);
-                    if (pinnedComment) {
-                        pinnedComment.classList.add('youtube-enhancer-pinned-comment');
-                    }
-                }
-            }
+    // Cleanup function for when feature is disabled — show comments again.
+    function cleanup() {
+        if (observer) {
+            observer.disconnect();
+            observer = null;
+        }
+        hiddenNodes.forEach(el => {
+            el.style.removeProperty('display');
+            el.style.removeProperty('visibility');
+            el.style.removeProperty('height');
+            el.style.removeProperty('margin');
+            el.style.removeProperty('padding');
+        });
+        hiddenNodes = new Set();
+    }
 
-            // Enhance subscription button
-            function enhanceSubscriptions() {
-                const subButton = document.querySelector(SELECTORS.SUBSCRIPTION_BUTTON);
-                if (subButton) {
-                    subButton.classList.add('youtube-enhancer-subscription');
-                }
-            }
-
-            // Observe DOM changes to apply enhancements to dynamically loaded content
-            function observeChanges() {
-                try {
-                    const observer = new MutationObserver((mutations) => {
-                        try {
-                            // Check if comments section is added
-                            const commentsSection = document.querySelector(SELECTORS.COMMENTS_SECTION);
-                            if (commentsSection && !commentsSection.classList.contains('youtube-enhancer-comments')) {
-                                enhanceComments();
-                            }
-
-                            // Check for subscription button changes
-                            const subButton = document.querySelector(SELECTORS.SUBSCRIPTION_BUTTON);
-                            if (subButton && !subButton.classList.contains('youtube-enhancer-subscription')) {
-                                enhanceSubscriptions();
-                            }
-
-                            // Check for header author area and add comment count if needed
-                            const headerAuthor = document.querySelector(SELECTORS.HEADER_AUTHOR);
-                            if (headerAuthor && !document.querySelector(SELECTORS.COMMENT_COUNT_DISPLAY)) {
-                                addCommentCountDisplay();
-                            }
-                        } catch (error) {
-                            console.error('Error processing mutations:', error);
-                            // Continue observing despite errors
-                        }
-                    });
-
-                    // Start observing with error handling
-                    observer.observe(document.body, {
-                        childList: true,
-                        subtree: true
-                    });
-
-                    // Cleanup function for observer
-                    window.addEventListener('unload', () => {
-                        try {
-                            observer.disconnect();
-                        } catch (error) {
-                            console.error('Error disconnecting observer:', error);
-                        }
-                    });
-                } catch (error) {
-                    console.error('YouTube Enhancer initialization failed:', error.message);
-                    return;
-                }
-            }
-
-            // Initialize on page load
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', init);
-            } else {
-                init();
-            }
-        })();
+    // Register with YouTube Enhancer (invoked by content.js; no self-init)
+    window.youtubeEnhancer = window.youtubeEnhancer || {};
+    window.youtubeEnhancer.subsComment = {
+        init: init
+    };
+})();

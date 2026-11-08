@@ -4,10 +4,9 @@ const CONFIG = {
     ANIMATION_DURATION: 300,
     FEATURES: [
         "vid",
-        "shorts2long",
         "subsComment",
         "sblock",
-        "subsbutton"
+        "thumbnails"
     ]
 };
 
@@ -45,86 +44,18 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Function to reload the current YouTube tab
-    async function reloadYouTubeTab() {
+    // V2 pattern: popup writes storage, the background relays a tab reload
+    // (if the user wants an immediate re-apply), and content.js picks up
+    // the state via chrome.storage.onChanged (no tab messaging, no
+    // chrome.scripting fallback — that fallback injected a lone content.js
+    // without the feature registry and caused the "Receiving end does
+    // not exist" / "Failed to inject" loop).
+    function reloadYouTubeTabs() {
         try {
-            const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-            const tab = tabs[0];
-            if (tab?.url?.match(/^https?:\/\/(www\.)?youtube\.com/)) {
-                await chrome.tabs.reload(tab.id);
-                updateStatus(statusText, 'Reloading page...', 'processing');
-            }
-        } catch (error) {
-            console.error('Error reloading tab:', error);
-            updateStatus(statusText, 'Error reloading page', 'error');
-        }
-    }
-
-    // Function to check if content script is loaded
-    async function isContentScriptLoaded(tabId) {
-        try {
-            await chrome.tabs.sendMessage(tabId, { action: 'ping' });
-            return true;
-        } catch (error) {
-            return false;
-        }
-    }
-
-    // Function to inject content script with retry
-    async function injectContentScript(tabId, retries = 3) {
-        for (let i = 0; i < retries; i++) {
-            try {
-                await chrome.scripting.executeScript({
-                    target: { tabId: tabId },
-                    files: ['content.js']
-                });
-                // Wait for script to initialize
-                await new Promise(resolve => setTimeout(resolve, 100));
-                if (await isContentScriptLoaded(tabId)) {
-                    return true;
-                }
-            } catch (error) {
-                console.warn(`Injection attempt ${i + 1} failed:`, error);
-                if (i === retries - 1) throw error;
-                await new Promise(resolve => setTimeout(resolve, 200 * (i + 1)));
-            }
-        }
-        return false;
-    }
-
-    // Function to send message to content script with error handling
-    async function sendMessageToContentScript(tabId, message) {
-        try {
-            // Check if we have permission to access the tab
-            const tab = await chrome.tabs.get(tabId);
-            if (!tab) {
-                throw new Error('Tab not found');
-            }
-
-            // First attempt to send message
-            await chrome.tabs.sendMessage(tabId, message);
-        } catch (error) {
-            console.warn('Initial message send failed:', error);
-
-            // If content script is not loaded, try to inject it
-            if (error.message.includes('Receiving end does not exist')) {
-                try {
-                    const injected = await injectContentScript(tabId);
-                    if (!injected) {
-                        throw new Error('Failed to inject content script');
-                    }
-                    // Retry sending the message after successful injection
-                    await chrome.tabs.sendMessage(tabId, message);
-                } catch (injectError) {
-                    console.error('Error injecting content script:', injectError);
-                    updateStatus(statusText, 'Error initializing extension', 'error');
-                    throw injectError;
-                }
-            } else {
-                updateStatus(statusText, 'Error communicating with page', 'error');
-                throw error;
-            }
-        }
+            chrome.runtime.sendMessage({ action: 'reloadYouTubeTabs' }, () => {
+                void chrome.runtime.lastError;
+            });
+        } catch (_) { /* storage write already landed; reload is best-effort */ }
     }
 
     // Toggle event handlers for feature toggles
@@ -132,6 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
         toggle.addEventListener('change', async (e) => {
             if (isProcessingAction) return;
             isProcessingAction = true;
+            try {
 
             const feature = e.target.dataset.feature;
             const isEnabled = e.target.checked;
@@ -140,17 +72,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const storageUpdate = {};
             storageUpdate[feature] = isEnabled;
+
             await chrome.storage.sync.set(storageUpdate);
 
-            // Send message to content script with error handling
-            const tabs = await chrome.tabs.query({ url: '*://*.youtube.com/*' });
-            for (const tab of tabs) {
-                await sendMessageToContentScript(tab.id, {
-                    action: 'toggleFeature',
-                    feature: feature,
-                    enabled: isEnabled
-                });
-            }
+            // V2 bridge: content.js reacts via storage.onChanged (no reload
+            // needed); background reload stays best-effort for stale tabs.
+            reloadYouTubeTabs();
 
             const featureName = document.querySelector(`.feature-card.${feature} .feature-title`)?.textContent || feature;
             updateStatus(
@@ -158,9 +85,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 `${featureName} ${isEnabled ? 'enabled' : 'disabled'}`,
                 'success'
             );
-
-            // Reload the page after a short delay
-            setTimeout(reloadYouTubeTab, 500);
 
             setTimeout(() => {
                 updateStatus(
@@ -170,7 +94,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 );
             }, CONFIG.STATUS_UPDATE_DELAY);
 
-            isProcessingAction = false;
+            } finally {
+                isProcessingAction = false;
+            }
         });
     });
 
@@ -178,6 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
     toggle.addEventListener('change', async () => {
         if (isProcessingAction) return;
         isProcessingAction = true;
+        try {
 
         const isEnabled = toggle.checked;
         applyPulseAnimation(container);
@@ -196,19 +123,12 @@ document.addEventListener('DOMContentLoaded', () => {
             isEnabled ? 'active' : 'inactive'
         );
 
-        // Send message to content script with error handling
-        const tabs = await chrome.tabs.query({ url: '*://*.youtube.com/*' });
-        for (const tab of tabs) {
-            await sendMessageToContentScript(tab.id, { 
-                action: 'toggleExtension', 
-                enabled: isEnabled 
-            });
+        // V2 bridge: content.js applies via storage.onChanged (no reload needed).
+        reloadYouTubeTabs();
+
+        } finally {
+            isProcessingAction = false;
         }
-
-        // Reload the page after a short delay
-        setTimeout(reloadYouTubeTab, 500);
-
-        isProcessingAction = false;
     });
 
     checkYouTubeTab()
@@ -227,17 +147,6 @@ document.addEventListener('DOMContentLoaded', () => {
             updateStatus(statusText, 'Error accessing tab information', 'error');
         });
 
-    chrome.runtime.onMessage.addListener((request) => {
-        if (request.action === "updateToggle") {
-            toggle.checked = request.enabled;
-            isExtensionEnabled = request.enabled;
-            updateStatus(
-                statusText,
-                request.enabled ? 'Extension is Active 🟢' : 'Extension is Inactive 🔴',
-                request.enabled ? 'active' : 'inactive'
-            );
-        }
-    });
 });
 
 // Track global extension state

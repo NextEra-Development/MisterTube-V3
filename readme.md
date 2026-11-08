@@ -1,105 +1,125 @@
-# MisterTube
+# MisterTube (YouTube Enhancer)
 
-A lightweight, open-source browser extension that improves your YouTube experience with essential quality-of-life enhancements while respecting your privacy.
+A lightweight, privacy-respecting, open-source browser extension that cleans up YouTube and puts you back in control of what you watch — **no accounts, no tracking, no data leaves your browser**.
 
-![YouTube Enhancer Logo](youtube-enhancer/icons/icon128.png)
+![MisterTube Logo](youtube-enhancer/icons/icon128.png)
 
-> **Note**: This extension is currently in development and may not be fully functional. Please report any issues you encounter.
+> **Status:** Active development (Manifest V3, Chromium browsers — Chrome, Edge, Brave). Found a bug? Open an issue — reports from users are what drive each release.
 
-## Features
+---
 
-- **Cleaner Interface**: Removes ads, promotional content, and other distractions
-- **Enhanced Video Grid**: Improves the video browsing experience with a better grid layout
-- **Focus Mode**: One-click immersive viewing experience
-- **Advanced Playback Controls**: Easily adjust video speed with a convenient dropdown menu
-- **Disable Comments**: Removes comments as a whole when enabled
-- **Shortz Block**: Blocks YouTube Shorts and redirects to the homepage
-- **Show Video Frames**: Replaces uploaders' attention-grabbing thumbnails with a frame from the middle of the video
-- **Performance Optimized**: Minimal impact on browser performance
+## ✨ Features
 
-## Installation
-> **Support MisterTube**: If you'd like to support the development of YouTube Enhancer and help us reach the Chrome Web Store, consider making a donation. Your contribution will bring us closer to making this extension available to a wider audience.
+Every feature can be toggled independently from the MisterTube popup, live (no reload needed), and everything resets cleanly when turned off.
 
-### Manual Installation (Developer Mode)
-1. Download or clone this repository to your local machine
-2. Open Chrome/Edge/Brave and navigate to `chrome://extensions/`
-3. Enable "Developer mode" at the top-right corner
-4. Click "Load unpacked" and select the extension directory
-5. YouTube Enhancer is now installed!
-## Usage
+| Feature | What it does |
+| --- | --- |
+| 🎬 **VidPlayz** | Cleaner video player: rounded corners, centered layout, hidden ad banners and promotional shelves, playlist-friendly layout — along with 1-click **Focus Mode** and a **speed dropdown (0.5x–2x)** in the player controls |
+| 💬 **Disable Comments** | Removes the comments section as a whole while enabled; turn it off and comments come straight back |
+| ⛔ **Shortz Block** | Hides Shorts everywhere — sidebar, tabs, homepage shelf, search results — and redirects any `/shorts/` page back to the homepage |
+| 🖼️ **Show Video Frames** | Replaces carefully engineered uploader thumbnails with a plain still frame from the video, so you browse based on what a video actually is. Toggle off to restore the original thumbnails instantly |
+| 🚀 **Performance** | No background page, no tracking scripts, no page-context injection — everything runs through Chrome's CSP-safe content-script APIs |
 
-After installation, navigate to YouTube.com to experience the following enhancements:
+**Sidebar recommendation cleanup:** on ordinary watch pages the right-hand recommendations rail is hidden and the video is centered; open a URL with a playlist (`&list=`) and the rail returns so you can manage the queue.
 
-- **Cleaner Interface**: The extension automatically removes ads and distractions for a more streamlined YouTube experience.
-- **Enhanced Video Grid**: A better video grid layout is implemented for easier browsing and discovery of content.
-- **Advanced Playback Controls**: Enhanced playback controls are added to the video player, including a convenient dropdown menu for adjusting video speed.
-- **Disable Comments**: When enabled, comments are removed as a whole; when off, they show again.
-- **Focus Mode**: To enter focus mode, click the "Focus" button (represented by an eye icon) in the player controls. This feature dims the page and centers the video for an immersive, distraction-free viewing experience.
-- **Speed Control**: To adjust the playback speed, click the speed button (initially set to "1x") in the player controls. This opens a dropdown menu where you can select your preferred playback speed.
+---
 
-## Known Issues
+## 📦 Installation
 
-- **TrustedHTML Warnings**: Occasionally, Chrome may log TrustedHTML warnings in the console. These warnings do not affect the functionality of the extension.
-- **YouTube Updates**: Due to the frequent updates to YouTube's UI, there may be occasional layout issues. We are working to address these as quickly as possible.
-- **Multi Device Support**: Currently, this extension is designed for desktop browsers only. We are exploring options for multi-device support in the future.
+1. Download or clone this repository:
+   ```bash
+   git clone https://github.com/Prarambha369/MisterTube-V3.git
+   cd MisterTube-V3
+   ```
+2. Open your browser and go to `chrome://extensions/`
+3. Enable **Developer mode** (top-right corner)
+4. Click **Load unpacked** and select the `youtube-enhancer/` folder
+5. Open a fresh YouTube tab and click the MisterTube icon to pick your features
 
+> Works in any Chromium browser: **Chrome, Edge, Brave, Opera, Vivaldi**. Firefox uses a different extension API and is not supported in this repository.
 
-## Contributing
+---
 
-Contributions are welcome! If you'd like to help improve YouTube Enhancer:
+## 🖱 Usage
+
+Once installed, toggling the **master switch** disables everything at once (YouTube becomes 100% stock). Each feature card acts independently:
+
+- **Focus mode** — click the eye icon in the player controls to dim the page and center the video
+- **Speed control** — click the speed button (reads `1x`) in the player controls, then pick a speed from the dropdown
+- **Disable Comments / Shortz Block / Show Video Frames** — flip the popup switch; changes apply immediately, and turning a feature off restores the original page state
+
+Settings are stored in browser sync storage and persist across YouTube's page changes and browser restarts.
+
+### Updating
+
+When you pull new commits, go to `chrome://extensions/`, click the **↻** refresh button on MisterTube, and refresh your YouTube tabs.
+
+---
+
+## 🐞 Known Issues
+
+- **TrustedHTML console warnings** — Chrome sometimes logs these page-internal warnings; they are harmless and do not affect the extension.
+- **YouTube UI changes** — YouTube ships DOM changes frequently; if a selector-based feature (Shorts blocking, comment hiding) misses a new layout, open an issue with a screenshot and it gets picked up quickly.
+- **Desktop only** — mobile browsers cannot load unpacked extension code.
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome!
 
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+2. Create a feature branch: `git checkout -b feature/amazing-feature`
+3. Make your changes and run the checks:
+   ```bash
+   node --check youtube-enhancer/*.js youtube-enhancer/features/*.js
+   node --test youtube-enhancer/tests/
+   python3 -c "import json; json.load(open('youtube-enhancer/manifest.json'))"
+   ```
+4. Commit with a descriptive message (`feat: ...`, `fix: ...`, `docs: ...`)
+5. Push to your fork and open a Pull Request
 
-### Development Setup
+No dependency install needed — plain JavaScript, no build step.
 
-```bash
-# Clone the repository
-git clone git@github.com:Prarambha369/YouTube_Enhancer.git
+---
 
-# Navigate to the extension directory
-cd youtube-enhancer
-```
-
-No dependencies to install — load the `youtube-enhancer/` directory unpacked as described above.
-
-## Code Structure
+## 🗂 Code Structure
 
 ```
 youtube-enhancer/
-├── manifest.json        # Extension configuration
-├── content.js           # Main content script loader
-├── popup.html           # Extension popup UI
-├── popup.js             # Popup functionality
-├── popup_styles.css     # Popup styles
-├── features/            # Individual feature modules
-│   ├── vidplayer.js     # Enhanced video player
-│   ├── vidplayer.css    # Vidplayer styles
-│   ├── shortsblock.js   # Shorts blocking functionality
-│   ├── shortsblock.css  # Shortsblock styles
-│   ├── subs-comment.js  # Disable Comments (hide comments as a whole)
-│   ├── subs-comment.css # Disable Comments styles
-│   └── thumbnails.js    # Show video frames (replace thumbnails with video frames)
-└── icons/               # Extension icons
-    ├── icon16.png
-    ├── icon32.png
-    ├── icon48.png
-    ├── icon128.png
-    ├── img.png
-    └── trash.png
+├── manifest.json          # Extension configuration (MV3)
+├── content.js             # Feature loader: reads settings, applies feature
+│                          # body-class CSS gates, enables/disables live
+├── background.js          # MV3 service worker: seeds defaults on install,
+│                          # relays popup tab-reload messages
+├── popup.html             # Popup UI (master switch + feature cards)
+├── popup.js               # Popup storage writes
+├── popup_styles.css       # Popup styles
+├── features/
+│   ├── vidplayer.js       # Enhanced video player (focus mode, speed, grid)
+│   ├── vidplayer.css      # Player chrome, watch-page layout, rail collapse
+│   ├── shortsblock.js     # Shorts blocking + /shorts/ redirect
+│   ├── shortsblock.css    # Shorts hiding (guide, tabs, shelves, results)
+│   ├── subs-comment.js    # Disable Comments (removes comments entirely)
+│   ├── subs-comment.css   # Comments section rules
+│   └── thumbnails.js      # Show video frames (frame swap with full restore)
+├── tests/
+│   └── thumbnails.test.js # Unit tests (standard library, no dependencies)
+└── icons/                 # Extension icons (16 / 32 / 48 / 128)
 ```
 
-## License
+**How it works:** every feature is a self-contained module exposing `init()`/`cleanup()` on `window.youtubeEnhancer`. `content.js` reads your toggles from `chrome.storage.sync`, applies a per-feature class gate on `<body>` so CSS only matches what you've enabled, and calls `init()`/`cleanup()` — so OFF always means *nothing running*, not just *hidden*.
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+---
 
-## Acknowledgments
+## 📄 License
+
+Licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
 
 - Thanks to all contributors who have helped improve this extension
-- Inspired by various YouTube enhancement tools in the open-source community
+- Inspired by the open-source YouTube-enhancement community
 
 ---
 

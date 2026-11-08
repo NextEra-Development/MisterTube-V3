@@ -17,8 +17,8 @@ Every feature can be toggled independently from the MisterTube popup, live (no r
 | 🎬 **VidPlayz** | Cleaner video player: rounded corners, centered layout, hidden ad banners and promotional shelves, playlist-friendly layout — along with 1-click **Focus Mode** and a **speed dropdown (0.5x–2x)** in the player controls |
 | 💬 **Disable Comments** | Removes the comments section as a whole while enabled; turn it off and comments come straight back |
 | ⛔ **Shortz Block** | Hides Shorts everywhere — sidebar, tabs, homepage shelf, search results — and redirects any `/shorts/` page back to the homepage |
-| 🖼️ **Show Video Frames** | Replaces carefully engineered uploader thumbnails with a plain still frame from the video, so you browse based on what a video actually is. Toggle off to restore the original thumbnails instantly |
-| 🚀 **Performance** | No background page, no tracking scripts, no page-context injection — everything runs through Chrome's CSP-safe content-script APIs |
+| 🖼️ **Show video frames** | Replaces carefully engineered uploader thumbnails with a plain still frame from the video, so you browse based on what a video actually is. Toggle off to restore the original thumbnails instantly |
+| 🚀 **Performance** | No persistent background page, no tracking scripts, no page-context injection — just a lightweight service worker and Chrome's CSP-safe content-script APIs |
 
 **Sidebar recommendation cleanup:** on ordinary watch pages the right-hand recommendations rail is hidden and the video is centered; open a URL with a playlist (`&list=`) and the rail returns so you can manage the queue.
 
@@ -42,11 +42,11 @@ Every feature can be toggled independently from the MisterTube popup, live (no r
 
 ## 🖱 Usage
 
-Once installed, toggling the **master switch** disables everything at once (YouTube becomes 100% stock). Each feature card acts independently:
+Once installed, toggling the master switch (**Extension Status**) off disables everything at once (YouTube becomes 100% stock). Each feature card acts independently:
 
 - **Focus mode** — click the eye icon in the player controls to dim the page and center the video
 - **Speed control** — click the speed button (reads `1x`) in the player controls, then pick a speed from the dropdown
-- **Disable Comments / Shortz Block / Show Video Frames** — flip the popup switch; changes apply immediately, and turning a feature off restores the original page state
+- **Disable Comments / Shortz Block / Show video frames** — flip the popup switch; changes apply immediately, and turning a feature off restores the original page state
 
 Settings are stored in browser sync storage and persist across YouTube's page changes and browser restarts.
 

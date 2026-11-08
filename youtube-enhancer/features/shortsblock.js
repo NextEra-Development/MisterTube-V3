@@ -7,12 +7,14 @@
     const originalPushState = history.pushState;
     const originalReplaceState = history.replaceState;
     let wrapped = false;
+    let initTimer = null;
 
     function init() {
         console.log('YouTube Enhancer: Initializing shortsblock feature');
 
         // Add delay to ensure page state is ready
-        setTimeout(() => {
+        initTimer = setTimeout(() => {
+            initTimer = null;
             if (window.location.pathname.startsWith('/shorts/')) {
                 redirectToHomepage();
                 return;
@@ -81,6 +83,10 @@
     // Cleanup function for when feature is disabled
     function cleanup() {
         console.log('YouTube Enhancer: Cleaning up shortsblock feature');
+        if (initTimer !== null) {
+            clearTimeout(initTimer);
+            initTimer = null;
+        }
         // Restore the exact original History API methods
         history.pushState = originalPushState;
         history.replaceState = originalReplaceState;

@@ -43,7 +43,11 @@
                 if (!state.initialized || state.playerWaitCancelled) return;
                 setupEnhancedPlayer(player);
             })
-            .catch(err => console.error('YouTube Enhancer: Error initializing player', err));
+            .catch(err => {
+                // Intentional cancellation on cleanup is not an error.
+                if (err && err.message === 'YouTube Enhancer: player wait cancelled') return;
+                console.error('YouTube Enhancer: Error initializing player', err);
+            });
 
         state.initialized = true;
 

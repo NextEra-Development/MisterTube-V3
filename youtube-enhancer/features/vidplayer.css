@@ -5,7 +5,8 @@
   --vidplayZ-background: rgba(0, 0, 0, 0.4);
   --vidplayZ-radius: var(--border-radius-video, 10px);
   --vidplayZ-controls-height: 48px;
-  --border-radius-md: 10px;
+  --border-radius: 8px;
+  --vidplayZ-radius-md: 10px;
   --transition-medium: 0.3s ease;
 }
 

@@ -12,6 +12,8 @@ A lightweight, open-source browser extension that improves your YouTube experien
 - **Enhanced Video Grid**: Improves the video browsing experience with a better grid layout
 - **Focus Mode**: One-click immersive viewing experience
 - **Advanced Playback Controls**: Easily adjust video speed with a convenient dropdown menu
+- **Subs Comment**: Subscription and comment enhancements
+- **Shortz Block**: Blocks YouTube Shorts and redirects to the homepage
 - **Performance Optimized**: Minimal impact on browser performance
 
 ## Installation
@@ -85,7 +87,9 @@ youtube-enhancer/
     ├── icon16.png
     ├── icon32.png
     ├── icon48.png
-    └── icon128.png
+    ├── icon128.png
+    ├── img.png
+    └── trash.png
 ```
 
 ## License

@@ -243,17 +243,6 @@ document.addEventListener('DOMContentLoaded', () => {
             updateStatus(statusText, 'Error accessing tab information', 'error');
         });
 
-    chrome.runtime.onMessage.addListener((request) => {
-        if (request.action === "updateToggle") {
-            toggle.checked = request.enabled;
-            isExtensionEnabled = request.enabled;
-            updateStatus(
-                statusText,
-                request.enabled ? 'Extension is Active 🟢' : 'Extension is Inactive 🔴',
-                request.enabled ? 'active' : 'inactive'
-            );
-        }
-    });
 });
 
 // Track global extension state

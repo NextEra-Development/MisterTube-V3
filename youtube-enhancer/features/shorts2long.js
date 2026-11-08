@@ -5,12 +5,14 @@
 
     let observer = null;
     let clickHandler = null;
+    let initTimer = null;
 
     function init() {
         console.log('YouTube Enhancer: Initializing shorts2long feature');
 
         // Add delay to ensure page state is ready
-        setTimeout(() => {
+        initTimer = setTimeout(() => {
+            initTimer = null;
             if (window.location.pathname.startsWith('/shorts/')) {
                 redirectToWatchUrl();
                 return;
@@ -149,6 +151,10 @@
     // Cleanup function for when feature is disabled
     function cleanup() {
         console.log('YouTube Enhancer: Cleaning up shorts2long feature');
+        if (initTimer !== null) {
+            clearTimeout(initTimer);
+            initTimer = null;
+        }
         if (observer) {
             observer.disconnect();
             observer = null;
@@ -158,7 +164,7 @@
             clickHandler = null;
         }
         // Restore converted link hrefs is not reliable after YouTube re-renders;
-        // converted markers are kept so re-init does not alter unchanged links.
+        // the converted markers are removed so a later re-init can re-convert links.
         document.querySelectorAll('a[data-shorts-converted]').forEach(link => {
             link.removeAttribute('data-shorts-converted');
         });

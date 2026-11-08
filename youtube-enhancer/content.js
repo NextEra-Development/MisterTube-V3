@@ -15,6 +15,8 @@
   let isExtensionEnabled = true;
   const injectedElements = {};
   const activeFeatureCleanups = {};
+  const featureGenerations = {};
+  const pendingEnableDisabled = {};
 
   // Wait until document.head and document.body are available.
   function waitForDocumentReady() {
@@ -130,11 +132,31 @@
   async function enableFeature(feature) {
     if (!CONFIG.FEATURE_FILES[feature]) return;
     if (activeFeatureCleanups[feature]) return;
+    const generation = featureGenerations[feature] = (featureGenerations[feature] || 0) + 1;
+    pendingEnableDisabled[feature] = false;
+    const isCancelled = () => featureGenerations[feature] !== generation;
+    const bailIfCancelled = () => {
+      if (!isCancelled()) return false;
+      // Latest intent is disabled: drop any CSS/JS injected after the disable.
+      // If a newer enable has started, it owns those elements — leave them.
+      if (pendingEnableDisabled[feature]) {
+        const css = injectedElements[feature]?.css || document.getElementById(`youtube-enhancer-${feature}-css`);
+        const js = injectedElements[feature]?.js || document.getElementById(`youtube-enhancer-${feature}-script`);
+        if (css) css.remove();
+        if (js) js.remove();
+        delete injectedElements[feature];
+      }
+      return true;
+    };
     try {
       await waitForDocumentReady();
+      if (bailIfCancelled()) return;
       await injectSettings();
+      if (bailIfCancelled()) return;
       await injectCSS(feature);
+      if (bailIfCancelled()) return;
       await loadFeatureJS(feature);
+      if (bailIfCancelled()) return;
       if (window.youtubeEnhancer?.[feature]?.init) {
         const cleanup = window.youtubeEnhancer[feature].init();
         if (cleanup) activeFeatureCleanups[feature] = cleanup;
@@ -147,6 +169,9 @@
 
   async function disableFeature(feature) {
     if (!CONFIG.FEATURE_FILES[feature]) return;
+    // Invalidate any in-flight enableFeature so it bails before init().
+    featureGenerations[feature] = (featureGenerations[feature] || 0) + 1;
+    pendingEnableDisabled[feature] = true;
     if (activeFeatureCleanups[feature]) {
       try {
         activeFeatureCleanups[feature]();

@@ -12,8 +12,9 @@ A lightweight, open-source browser extension that improves your YouTube experien
 - **Enhanced Video Grid**: Improves the video browsing experience with a better grid layout
 - **Focus Mode**: One-click immersive viewing experience
 - **Advanced Playback Controls**: Easily adjust video speed with a convenient dropdown menu
-- **Subs Comment**: Subscription and comment enhancements
+- **Disable Comments**: Removes comments as a whole when enabled
 - **Shortz Block**: Blocks YouTube Shorts and redirects to the homepage
+- **Show Video Frames**: Replaces uploaders' attention-grabbing thumbnails with a frame from the middle of the video
 - **Performance Optimized**: Minimal impact on browser performance
 
 ## Installation
@@ -32,7 +33,7 @@ After installation, navigate to YouTube.com to experience the following enhancem
 - **Cleaner Interface**: The extension automatically removes ads and distractions for a more streamlined YouTube experience.
 - **Enhanced Video Grid**: A better video grid layout is implemented for easier browsing and discovery of content.
 - **Advanced Playback Controls**: Enhanced playback controls are added to the video player, including a convenient dropdown menu for adjusting video speed.
-- **Shorts to Long Videos**: The extension automatically redirects YouTube Shorts to their full-length video versions.
+- **Disable Comments**: When enabled, comments are removed as a whole; when off, they show again.
 - **Focus Mode**: To enter focus mode, click the "Focus" button (represented by an eye icon) in the player controls. This feature dims the page and centers the video for an immersive, distraction-free viewing experience.
 - **Speed Control**: To adjust the playback speed, click the speed button (initially set to "1x") in the player controls. This opens a dropdown menu where you can select your preferred playback speed.
 
@@ -77,12 +78,11 @@ youtube-enhancer/
 ├── features/            # Individual feature modules
 │   ├── vidplayer.js     # Enhanced video player
 │   ├── vidplayer.css    # Vidplayer styles
-│   ├── shorts2long.js   # Shorts to regular video converter
-│   ├── shorts2long.css  # Shorts2long styles
 │   ├── shortsblock.js   # Shorts blocking functionality
 │   ├── shortsblock.css  # Shortsblock styles
-│   ├── subs-comment.js  # Subscriptions & comments enhancements
-│   └── subs-comment.css # Subs-comment styles
+│   ├── subs-comment.js  # Disable Comments (hide comments as a whole)
+│   ├── subs-comment.css # Disable Comments styles
+│   └── thumbnails.js    # Show video frames (replace thumbnails with video frames)
 └── icons/               # Extension icons
     ├── icon16.png
     ├── icon32.png

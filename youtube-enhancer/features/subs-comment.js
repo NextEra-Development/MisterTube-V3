@@ -1,19 +1,60 @@
 // features/subs-comment.js
+// Repurposed: "Disable Comments" — when ON, comments are removed as a whole;
+// when OFF (cleanup), they show again. Storage key stays `subsComment`.
 (function() {
     'use strict';
 
-    // Configuration for subscription and comments features
-    const SELECTORS = {
-        COMMENTS_SECTION: 'ytd-comments#comments',
-        SUBSCRIPTION_BUTTON: 'ytd-subscribe-button-renderer',
-        COMMENTS_COUNT: 'ytd-comments-header-renderer #count',
-        PINNED_COMMENT: 'ytd-comment-thread-renderer[is-pinned]',
-        HEADER_AUTHOR: '#header-author',
-        COMMENT_COUNT_DISPLAY: '#comment-count-display'
-    };
+    const COMMENT_SELECTORS = [
+        'ytd-comments#comments',
+        '#comments',
+        'ytd-comments-header-renderer',
+        'ytd-comment-simplebox-renderer',
+        'ytd-engagement-panel-section-list-renderer[target-id="comments-panel"]'
+    ];
 
     let observer = null;
-    const addedNodes = [];
+    let hiddenNodes = new Set();
+
+    // V2 visibility discipline: only hide nodes that are actually connected
+    // and visible, so lazy SPA mounts don't trigger off-screen work.
+    function isVisible(el) {
+        if (!el.isConnected) return false;
+        const rect = el.getBoundingClientRect();
+        if (!rect || rect.width === 0 || rect.height === 0) return false;
+        for (let node = el; node; node = node.parentElement) {
+            const cs = getComputedStyle(node);
+            if (cs.display === 'none' || cs.visibility === 'hidden' || cs.opacity === '0') return false;
+        }
+        return true;
+    }
+
+    // V2 waitForElement: poll for a selector with a timeout (MutationObserver).
+    function waitForElement(selector, timeoutMs) {
+        return new Promise((resolve) => {
+            const existing = document.querySelector(selector);
+            if (existing) {
+                resolve(existing);
+                return;
+            }
+            let settled = false;
+            const finish = (element) => {
+                if (settled) return;
+                settled = true;
+                poller.disconnect();
+                clearTimeout(timeout);
+                resolve(element);
+            };
+            const poller = new MutationObserver(() => {
+                const element = document.querySelector(selector);
+                if (element) finish(element);
+            });
+            const timeout = setTimeout(() => finish(null), timeoutMs);
+            poller.observe(document.documentElement, {
+                childList: true,
+                subtree: true
+            });
+        });
+    }
 
     // Settings are injected by content.js into page context (window.youtubeEnhancerSettings);
     // this script runs in page context and must not use chrome.* APIs.
@@ -32,141 +73,36 @@
         if (settings.extensionEnabled === false) return cleanup;
         if (settings.features && settings.features.subsComment === false) return cleanup;
 
-        enhanceComments();
-        addCommentCountDisplay();
-        enhanceSubscriptions();
-        observeChanges();
+        // V2 setupUI pattern: wait (bounded) for the comments surface, then hide it.
+        // The MutationObserver covers surfaces that mount after the wait fires.
+        waitForElement('#comments', 15000).then(() => {
+            disableComments();
+            observeChanges();
+        });
 
         return cleanup;
     }
 
-    // Parse YouTube's formatted counts, e.g. "1.2M", "345K", "1.5B", "1,234".
-    function parseFormattedCount(text) {
-        if (!text) return NaN;
-        const cleaned = String(text).trim().toUpperCase().replace(/,/g, '');
-        const match = cleaned.match(/^([\d.]+)\s*([KMB])?/);
-        if (!match) return NaN;
-        const value = parseFloat(match[1]);
-        if (Number.isNaN(value)) return NaN;
-        const multipliers = { K: 1000, M: 1000000, B: 1000000000 };
-        const multiplier = match[2] ? multipliers[match[2]] : 1;
-        return value * multiplier;
+    // Disable comments as a whole: hide every comment surface + the engage button region.
+    function disableComments() {
+        COMMENT_SELECTORS.forEach(sel => {
+            document.querySelectorAll(sel).forEach(el => {
+                if (!isVisible(el)) return; // V2 discipline: skip off-screen/hidden nodes
+                hiddenNodes.add(el);
+                el.style.setProperty('display', 'none', 'important');
+                el.style.setProperty('visibility', 'hidden', 'important');
+                el.style.setProperty('height', '0', 'important');
+                el.style.setProperty('margin', '0', 'important');
+                el.style.setProperty('padding', '0', 'important');
+            });
+        });
     }
 
-    // Format number with K/M/B
-    function formatNumber(num) {
-        if (Number.isNaN(num)) return '0';
-        if (num >= 1000000000) {
-            return (num / 1000000000).toFixed(1) + 'B';
-        }
-        if (num >= 1000000) {
-            return (num / 1000000).toFixed(1) + 'M';
-        }
-        if (num >= 1000) {
-            return (num / 1000).toFixed(1) + 'K';
-        }
-        return num.toString();
-    }
-
-    function makeSpan(className, text) {
-        const span = document.createElement('span');
-        span.className = className;
-        span.textContent = text;
-        return span;
-    }
-
-    // Add comment count display
-    function addCommentCountDisplay() {
-        const headerAuthor = document.querySelector(SELECTORS.HEADER_AUTHOR);
-        if (!headerAuthor) return;
-
-        // Check if comment count display already exists
-        if (document.querySelector(SELECTORS.COMMENT_COUNT_DISPLAY)) return;
-
-        // Get comment count
-        const commentsCount = document.querySelector(SELECTORS.COMMENTS_COUNT);
-        if (!commentsCount) return;
-
-        // Create comment count display element (no innerHTML)
-        const commentCountDisplay = document.createElement('div');
-        commentCountDisplay.id = 'comment-count-display';
-        commentCountDisplay.className = 'youtube-enhancer-comment-count';
-
-        // Format the count
-        const count = parseFormattedCount(commentsCount.textContent);
-        const formattedCount = Number.isNaN(count) ? '0' : formatNumber(count);
-
-        // Set the content via textContent and created spans
-        commentCountDisplay.appendChild(makeSpan('comment-count-icon', '💬'));
-        commentCountDisplay.appendChild(makeSpan('comment-count-text', `${formattedCount} Comments`));
-
-        // Add to header author area
-        headerAuthor.appendChild(commentCountDisplay);
-        addedNodes.push(commentCountDisplay);
-
-        // Create subscriber count display element
-        const subscriberCountDisplay = document.createElement('div');
-        subscriberCountDisplay.className = 'youtube-enhancer-subscriber-count';
-        subscriberCountDisplay.id = 'youtube-enhancer-subscriber-count';
-
-        // Get subscriber count from YouTube's DOM
-        const subCountElement = document.querySelector('yt-formatted-string#subscriber-count');
-        if (subCountElement) {
-            const parsedSubs = parseFormattedCount(subCountElement.textContent);
-            const formattedSubs = Number.isNaN(parsedSubs) ? 'N/A' : formatNumber(parsedSubs);
-            subscriberCountDisplay.appendChild(makeSpan('sub-icon', '👥'));
-            subscriberCountDisplay.appendChild(makeSpan('sub-count', `${formattedSubs} subs`));
-        } else {
-            subscriberCountDisplay.textContent = 'Subscribers: N/A';
-        }
-        headerAuthor.appendChild(subscriberCountDisplay);
-        addedNodes.push(subscriberCountDisplay);
-    }
-
-    // Enhance comments section
-    function enhanceComments() {
-        // Apply styling to comments section
-        const commentsSection = document.querySelector(SELECTORS.COMMENTS_SECTION);
-        if (commentsSection) {
-            commentsSection.classList.add('youtube-enhancer-comments');
-
-            // Highlight pinned comments
-            const pinnedComment = document.querySelector(SELECTORS.PINNED_COMMENT);
-            if (pinnedComment) {
-                pinnedComment.classList.add('youtube-enhancer-pinned-comment');
-            }
-        }
-    }
-
-    // Enhance subscription button
-    function enhanceSubscriptions() {
-        const subButton = document.querySelector(SELECTORS.SUBSCRIPTION_BUTTON);
-        if (subButton) {
-            subButton.classList.add('youtube-enhancer-subscription');
-        }
-    }
-
-    // Observe DOM changes to apply enhancements to dynamically loaded content
+    // Observe DOM changes so late-loaded comment surfaces also get hidden.
     function observeChanges() {
-        observer = new MutationObserver((mutations) => {
+        observer = new MutationObserver(() => {
             try {
-                // Check if comments section is added
-                const commentsSection = document.querySelector(SELECTORS.COMMENTS_SECTION);
-                if (commentsSection && !commentsSection.classList.contains('youtube-enhancer-comments')) {
-                    enhanceComments();
-                }
-
-                // Check for subscription button changes
-                const subButton = document.querySelector(SELECTORS.SUBSCRIPTION_BUTTON);
-                if (subButton && !subButton.classList.contains('youtube-enhancer-subscription')) {
-                    enhanceSubscriptions();
-                }
-
-                // Check for header author area and add comment count if needed
-                const headerAuthor = document.querySelector(SELECTORS.HEADER_AUTHOR);
-                if (headerAuthor && !document.querySelector(SELECTORS.COMMENT_COUNT_DISPLAY)) {
-                    addCommentCountDisplay();
-                }
+                disableComments();
             } catch (error) {
                 console.error('YouTube Enhancer: Error processing mutations:', error);
             }
@@ -180,23 +116,20 @@
         }
     }
 
-    // Cleanup function for when feature is disabled
+    // Cleanup function for when feature is disabled — show comments again.
     function cleanup() {
         if (observer) {
             observer.disconnect();
             observer = null;
         }
-        addedNodes.forEach(node => node.remove());
-        addedNodes.length = 0;
-        document.querySelectorAll('.youtube-enhancer-comments').forEach(el => {
-            el.classList.remove('youtube-enhancer-comments');
+        hiddenNodes.forEach(el => {
+            el.style.removeProperty('display');
+            el.style.removeProperty('visibility');
+            el.style.removeProperty('height');
+            el.style.removeProperty('margin');
+            el.style.removeProperty('padding');
         });
-        document.querySelectorAll('.youtube-enhancer-pinned-comment').forEach(el => {
-            el.classList.remove('youtube-enhancer-pinned-comment');
-        });
-        document.querySelectorAll('.youtube-enhancer-subscription').forEach(el => {
-            el.classList.remove('youtube-enhancer-subscription');
-        });
+        hiddenNodes = new Set();
     }
 
     // Register with YouTube Enhancer (invoked by content.js; no self-init)

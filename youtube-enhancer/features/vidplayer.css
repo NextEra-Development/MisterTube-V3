@@ -10,10 +10,12 @@
   --transition-medium: 0.3s ease;
 }
 
-#movie_player {
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid #movie_player {
     width: 100% !important;
     height: auto !important;
-    min-height: 360px !important;
+    /* Give the player a real box: height:auto alone collapsed it to 0px
+       (no min-height band, no dead playlist-page space). */
+    aspect-ratio: 16 / 9 !important;
     position: relative !important;
     top: 0 !important;
     left: 0 !important;
@@ -23,7 +25,7 @@
     overflow: hidden !important;
 }
 
-.html5-video-container {
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid .html5-video-container {
     width: 100% !important;
     height: 100% !important;
     border-radius: 10px !important;
@@ -33,23 +35,25 @@
     overflow: hidden !important;
 }
 
-.video-stream {
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid .video-stream {
     width: 100% !important;
     height: 100% !important;
     border-radius: 10px !important;
 }
 
-ytd-watch-flexy[theater] #player-theater-container {
-    height: 100vh !important;
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid ytd-watch-flexy[theater] #player-theater-container {
+    height: auto !important;
+    max-height: 75vh !important;
+    aspect-ratio: 16 / 9 !important;
     border-radius: 10px !important;
 }
 
-.ytp-chrome-bottom {
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid .ytp-chrome-bottom {
     width: 100% !important;
     border-radius: 0 0 10px 10px !important;
 }
 
-.ytp-progress-bar-container {
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid .ytp-progress-bar-container {
     width: 100% !important;
     height: 8px !important;
     margin: 0 !important;
@@ -58,99 +62,128 @@ ytd-watch-flexy[theater] #player-theater-container {
     justify-content: center !important;
 }
 
-.ytp-progress-bar {
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid .ytp-progress-bar {
     width: 100% !important;
     height: 8px !important;
     border-radius: 10px !important;
 }
 
-.ytp-scrubber-button {
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid .ytp-scrubber-button {
     width: 16px !important;
     height: 16px !important;
     border-radius: 50% !important;
     background-color: #ff0000 !important;
 }
 
-::-webkit-scrollbar {
+/* Overflow/scrollbar must stay visible so the responsive grid can reflow
+   instead of clipping the right edge (see vidplayer.js auto-fit). */
+
+/* Hide YouTube phone/masthead clutter only.
+   Comments, playlist, actions, and the secondary rail are RESTORED
+   below so they load normally (see gated #secondary rule). */
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid ytd-app #header > ytd-rich-grid-renderer,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid ytd-app ytd-mini-guide-renderer,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid ytd-rich-section-renderer > ytd-rich-shelf-renderer,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid ytd-masthead #end,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid ytd-menu-renderer > .yt-spec-icon-shape > div,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid #voice-search-button > yt-button-shape,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid #guide-button,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid #country-code,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid #logo-icon > .yt-spec-icon-shape > div,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid ytd-merch-shelf-renderer,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid ytd-reel-shelf-renderer,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid .yt-chip-cloud-renderer,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid .YtVideoMetadataCarouselViewModelHost,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid .ytd-live-chat-frame > yt-button-shape,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid #show-hide-button > .ytd-live-chat-frame,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid #creator-heart-button,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid #foreground-content,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid ytd-reel-shelf-renderer,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid ytd-video-description-infocards-section-renderer,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid a.bold.yt-formatted-string,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid .ytp-next-button,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid .ytp-autonav-toggle-button,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid #header-top-row,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid .yt-spec-avatar-shape--cairo-refresh,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid .YtSearchboxComponentClearButton,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid .yt-lockup-view-model-wiz--collection-stack-2 > .yt-lockup-view-model-wiz__content-image > .yt-collection-thumbnail-view-model > .collections-stack-wiz > div > .collections-stack-wiz__collection-stack2 {
     display: none !important;
 }
 
-html, body {
-    overflow-x: hidden !important;
+/* Un-hide owners / actions / comments / playlist chrome so they load.
+   (Previously removed from the blanket hide above.) */
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid ytd-video-owner-renderer,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid #like-button,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid #dislike-button,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid #menu > ytd-watch-metadata,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid #subscribe-button-shape,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid #actions,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid #avatar-section,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid ytd-comment-view-model,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid ytd-comment-simplebox-renderer,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid ytd-comments-header-renderer #title,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid #pinned-comment-badge,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid ytd-comment-view-model #published-time-text,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid ytd-comment-replies-renderer,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid #comments,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid #playlist-actions,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid .ytd-playlist-panel-renderer.publisher {
+    display: block !important;
 }
 
-/* Hide YouTube elements */
-ytd-app #header > ytd-rich-grid-renderer,
-ytd-app ytd-mini-guide-renderer,
-ytd-rich-section-renderer > ytd-rich-shelf-renderer,
-ytd-masthead #end,
-ytd-menu-renderer > .yt-spec-icon-shape > div,
-#voice-search-button > yt-button-shape,
-#guide-button,
-#country-code,
-#logo-icon > .yt-spec-icon-shape > div,
-ytd-comment-view-model > .yt-img-shadow,
-ytd-comment-view-model,
-#author-thumbnail > .yt-img-shadow,
-ytd-comment-simplebox-renderer,
-#avatar > .yt-img-shadow,
-ytd-video-owner-renderer,
-#like-button,
-#dislike-button,
-#menu > ytd-watch-metadata,
-#subscribe-button-shape,
-ytd-comments-header-renderer #title,
-ytd-merch-shelf-renderer,
-ytd-reel-shelf-renderer,
-.yt-chip-cloud-renderer,
-.YtVideoMetadataCarouselViewModelHost,
-#pinned-comment-badge,
-.ytd-live-chat-frame > yt-button-shape,
-#show-hide-button > .ytd-live-chat-frame,
-ytd-comment-view-model #published-time-text,
-#creator-heart-button,
-#actions,
-#foreground-content,
-ytd-reel-shelf-renderer,
-ytd-video-description-infocards-section-renderer,
-a.bold.yt-formatted-string,
-.ytp-next-button,
-.ytp-autonav-toggle-button,
-#playlist-actions,
-.ytd-playlist-panel-renderer.publisher,
-#header-top-row,
-ytd-comment-replies-renderer > .yt-img-shadow,
-ytd-comment-replies-renderer,
-.yt-spec-avatar-shape--cairo-refresh,
-#avatar-section,
-ytd-watch-next-secondary-results-renderer > ytd-item-section-renderer,
-#secondary,
-.YtSearchboxComponentClearButton,
-.yt-lockup-view-model-wiz--collection-stack-2 > .yt-lockup-view-model-wiz__content-image > .yt-collection-thumbnail-view-model > .collections-stack-wiz > div > .collections-stack-wiz__collection-stack2 {
+/* Recommendations (#secondary): hidden UNLESS a playlist is active.
+   vidplayer.js toggles body.youtube-enhancer-has-playlist off the list= param. */
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid:not(.youtube-enhancer-has-playlist) #secondary,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid:not(.youtube-enhancer-has-playlist) ytd-watch-next-secondary-results-renderer,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid:not(.youtube-enhancer-has-playlist) ytd-watch-next-secondary-results-renderer > ytd-item-section-renderer,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid:not(.youtube-enhancer-has-playlist) ytd-watch-flexy #secondary {
     display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+}
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid.youtube-enhancer-has-playlist #secondary {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid.youtube-enhancer-has-playlist ytd-watch-next-secondary-results-renderer {
+    /* Renderer's natural display is block; forcing flex refloows children */
+    display: unset !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+/* Center the primary column when the secondary rail collapses. */
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid:not(.youtube-enhancer-has-playlist) ytd-watch-flexy {
+    justify-content: center !important;
+}
+/* Never allow horizontal overflow to create an artificial right-hand gap. */
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid ytd-watch-flexy,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid ytd-rich-grid-renderer #contents {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
 }
 
 /* VidPlayz - Enhanced Video Player CSS */
 
 /* Make thumbnail overlays semi-transparent */
-.ytp-ce-element, 
-.ytp-ce-covering-overlay, 
-.ytp-ce-element-shadow,
-.ytp-ce-covering-image,
-.ytp-ce-expanding-image,
-.ytp-ce-element.ytp-ce-channel.ytp-ce-channel-this,
-.ytp-ce-element.ytp-ce-video.ytp-ce-element-show {
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid .ytp-ce-element, 
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid .ytp-ce-covering-overlay, 
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid .ytp-ce-element-shadow,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid .ytp-ce-covering-image,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid .ytp-ce-expanding-image,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid .ytp-ce-element.ytp-ce-channel.ytp-ce-channel-this,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid .ytp-ce-element.ytp-ce-video.ytp-ce-element-show {
   opacity: 0.4 !important;
   transition: opacity 0.3s ease !important;
 }
 
 /* Increase opacity on hover */
-.ytp-ce-element:hover {
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid .ytp-ce-element:hover {
   opacity: 0.8 !important;
 }
 
 /* Preview thumbnail */
-.youtube-enhancer-preview-container {
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid .youtube-enhancer-preview-container {
   position: absolute;
   bottom: 50px;
   padding: 4px;
@@ -161,14 +194,14 @@ ytd-watch-next-secondary-results-renderer > ytd-item-section-renderer,
   pointer-events: none;
 }
 
-.youtube-enhancer-preview-thumbnail {
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid .youtube-enhancer-preview-thumbnail {
   width: 160px;
   height: 90px;
   background-color: #000;
   border-radius: 4px;
 }
 
-.youtube-enhancer-preview-timestamp {
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid .youtube-enhancer-preview-timestamp {
   text-align: center;
   color: #fff;
   font-size: 12px;
@@ -176,7 +209,7 @@ ytd-watch-next-secondary-results-renderer > ytd-item-section-renderer,
 }
 
 /* Volume display */
-.youtube-enhancer-volume-display {
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid .youtube-enhancer-volume-display {
   position: absolute;
   background-color: var(--vidplayZ-background);
   border-radius: 4px;
@@ -191,14 +224,14 @@ ytd-watch-next-secondary-results-renderer > ytd-item-section-renderer,
   transition: opacity 0.2s ease;
 }
 
-.ytp-volume-panel:hover .youtube-enhancer-volume-display {
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid .ytp-volume-panel:hover .youtube-enhancer-volume-display {
   opacity: 1;
 }
 
 /* Custom buttons */
-.youtube-enhancer-screenshot-button,
-.youtube-enhancer-loop-button,
-.youtube-enhancer-speed-button {
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid .youtube-enhancer-screenshot-button,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid .youtube-enhancer-loop-button,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid .youtube-enhancer-speed-button {
   opacity: 0.9;
   transition: all 0.2s ease !important;
   position: relative;
@@ -212,25 +245,25 @@ ytd-watch-next-secondary-results-renderer > ytd-item-section-renderer,
   background: none;
 }
 
-.youtube-enhancer-screenshot-button:hover,
-.youtube-enhancer-loop-button:hover,
-.youtube-enhancer-speed-button:hover {
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid .youtube-enhancer-screenshot-button:hover,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid .youtube-enhancer-loop-button:hover,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid .youtube-enhancer-speed-button:hover {
   opacity: 1;
   transform: scale(1.05);
 }
 
-.youtube-enhancer-screenshot-button svg,
-.youtube-enhancer-loop-button svg {
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid .youtube-enhancer-screenshot-button svg,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid .youtube-enhancer-loop-button svg {
   fill: #fff;
   width: 20px;
   height: 20px;
 }
 
-.youtube-enhancer-loop-button.active svg {
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid .youtube-enhancer-loop-button.active svg {
   fill: var(--vidplayZ-primary) !important;
 }
 
-.youtube-enhancer-speed-button span {
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid .youtube-enhancer-speed-button span {
   color: #fff;
   font-size: 13px;
   font-weight: 500;
@@ -240,12 +273,12 @@ ytd-watch-next-secondary-results-renderer > ytd-item-section-renderer,
   transition: all 0.2s ease;
 }
 
-.youtube-enhancer-speed-button:hover span {
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid .youtube-enhancer-speed-button:hover span {
   background-color: rgba(255, 255, 255, 0.2);
 }
 
 /* Speed menu */
-.youtube-enhancer-speed-menu {
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid .youtube-enhancer-speed-menu {
   position: fixed;
   display: none;
   background-color: var(--vidplayZ-background);
@@ -258,7 +291,7 @@ ytd-watch-next-secondary-results-renderer > ytd-item-section-renderer,
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.youtube-enhancer-speed-option {
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid .youtube-enhancer-speed-option {
   padding: 8px 16px;
   color: #fff;
   font-size: 13px;
@@ -269,24 +302,24 @@ ytd-watch-next-secondary-results-renderer > ytd-item-section-renderer,
   justify-content: space-between;
 }
 
-.youtube-enhancer-speed-option:hover {
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid .youtube-enhancer-speed-option:hover {
   background-color: rgba(255, 255, 255, 0.1);
   padding-left: 20px;
 }
 
-.youtube-enhancer-speed-option.active {
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid .youtube-enhancer-speed-option.active {
   color: var(--vidplayZ-primary);
   background-color: rgba(255, 255, 255, 0.05);
 }
 
-.youtube-enhancer-speed-option.active::after {
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid .youtube-enhancer-speed-option.active::after {
   content: '✓';
   margin-left: 8px;
   color: var(--vidplayZ-primary);
 }
 
 /* Quality badge */
-.youtube-enhancer-quality-badge {
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid .youtube-enhancer-quality-badge {
   position: absolute;
   top: 8px;
   right: 8px;
@@ -301,7 +334,7 @@ ytd-watch-next-secondary-results-renderer > ytd-item-section-renderer,
 }
 
 /* Notifications */
-.youtube-enhancer-notification {
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid .youtube-enhancer-notification {
   position: fixed;
   bottom: 80px;
   left: 50%;
@@ -317,17 +350,17 @@ ytd-watch-next-secondary-results-renderer > ytd-item-section-renderer,
   border-left: 3px solid var(--vidplayZ-primary);
 }
 
-.youtube-enhancer-notification.visible {
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid .youtube-enhancer-notification.visible {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
 }
 
-.youtube-enhancer-notification.error {
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid .youtube-enhancer-notification.error {
   border-left: 3px solid var(--status-error, #f44336);
 }
 
 /* Video end overlay */
-.youtube-enhancer-end-overlay {
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid .youtube-enhancer-end-overlay {
   position: absolute;
   top: 0;
   left: 0;
@@ -340,7 +373,7 @@ ytd-watch-next-secondary-results-renderer > ytd-item-section-renderer,
   z-index: 50;
 }
 
-.youtube-enhancer-replay-button {
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid .youtube-enhancer-replay-button {
   background-color: var(--vidplayZ-primary);
   color: #000;
   border: none;
@@ -352,7 +385,7 @@ ytd-watch-next-secondary-results-renderer > ytd-item-section-renderer,
   transition: transform 0.2s ease, background-color 0.2s ease;
 }
 
-.youtube-enhancer-replay-button:hover {
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid .youtube-enhancer-replay-button:hover {
   transform: scale(1.05);
   background-color: var(--vidplayZ-secondary);
 }
@@ -374,13 +407,13 @@ ytd-watch-next-secondary-results-renderer > ytd-item-section-renderer,
     font-size: 14px;
   }
 
-  #masthead-container #search-container.ytd-searchbox {
+  body.youtube-enhancer-enabled.youtube-enhancer-feature-vid #masthead-container #search-container.ytd-searchbox {
     max-width: 90%;
   }
 }
 
 /* Center YouTube search bar */
-#masthead-container #search-container.ytd-searchbox {
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid #masthead-container #search-container.ytd-searchbox {
   display: flex;
   justify-content: center;
   margin: 0 auto;
@@ -389,23 +422,23 @@ ytd-watch-next-secondary-results-renderer > ytd-item-section-renderer,
 }
 
 /* Ensure the search input takes appropriate space */
-#masthead #search-container.ytd-searchbox #search-form {
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid #masthead #search-container.ytd-searchbox #search-form {
   width: 100%;
 }
 
 /* Ensure avatar and all its components are fully visible */
-.page-header-view-model-wiz__page-header-headline-image.yt-decorated-avatar-view-model-wiz,
-#avatar-link,
-#avatar-section,
-.ytd-topbar-menu-button-renderer,
-ytd-topbar-menu-button-renderer,
-ytd-masthead .ytd-masthead[slot="avatar-button"],
-#avatar,
-#img.yt-img-shadow,
-#avatar > img,
-.yt-img-shadow,
-ytd-topbar-menu-button-renderer > .yt-decorated-avatar-view-model-wiz,
-#avatar.ytd-masthead {
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid .page-header-view-model-wiz__page-header-headline-image.yt-decorated-avatar-view-model-wiz,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid #avatar-link,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid #avatar-section,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid .ytd-topbar-menu-button-renderer,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid ytd-topbar-menu-button-renderer,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid ytd-masthead .ytd-masthead[slot="avatar-button"],
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid #avatar,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid #img.yt-img-shadow,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid #avatar > img,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid .yt-img-shadow,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid ytd-topbar-menu-button-renderer > .yt-decorated-avatar-view-model-wiz,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid #avatar.ytd-masthead {
   display: inline-block !important;
   visibility: visible !important;
   opacity: 1 !important;
@@ -413,7 +446,7 @@ ytd-topbar-menu-button-renderer > .yt-decorated-avatar-view-model-wiz,
 }
 
 /* Force avatar image to be visible with correct dimensions */
-#avatar > img.yt-img-shadow {
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid #avatar > img.yt-img-shadow {
   width: 32px !important;
   height: 32px !important;
   border-radius: 50% !important;
@@ -422,7 +455,7 @@ ytd-topbar-menu-button-renderer > .yt-decorated-avatar-view-model-wiz,
 }
 
 /* Make sure the avatar container is properly sized */
-#avatar {
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid #avatar {
   width: 32px !important;
   height: 32px !important;
   display: block !important;
@@ -430,24 +463,24 @@ ytd-topbar-menu-button-renderer > .yt-decorated-avatar-view-model-wiz,
 }
 
 /* Ensure all parents of avatar are visible */
-#buttons.ytd-masthead, 
-#end.ytd-masthead {
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid #buttons.ytd-masthead, 
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid #end.ytd-masthead {
   display: flex !important;
   visibility: visible !important;
   opacity: 1 !important;
 }
 
 /* Optional: adjust search container positioning on the page */
-#masthead #center {
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid #masthead #center {
   display: flex;
   justify-content: center;
   flex: 1;
 }
 
 /* Restore thumbnail hover overlay elements */
-.ytThumbnailHoverOverlayViewModelHost,
-.ytThumbnailHoverOverlayViewModelStyleCover.ytThumbnailHoverOverlayViewModelScrim,
-.yt-spec-avatar-shape__button--button-giant.yt-spec-avatar-shape__button.yt-spec-avatar-shape > .yt-spec-avatar-shape--cairo-refresh {
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid .ytThumbnailHoverOverlayViewModelHost,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid .ytThumbnailHoverOverlayViewModelStyleCover.ytThumbnailHoverOverlayViewModelScrim,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid .yt-spec-avatar-shape__button--button-giant.yt-spec-avatar-shape__button.yt-spec-avatar-shape > .yt-spec-avatar-shape--cairo-refresh {
   display: block !important;
   visibility: visible !important;
   opacity: 1 !important;
@@ -455,27 +488,26 @@ ytd-topbar-menu-button-renderer > .yt-decorated-avatar-view-model-wiz,
 }
 
 /* Enhance hover effects */
-.ytThumbnailHoverOverlayViewModelHost {
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid .ytThumbnailHoverOverlayViewModelHost {
   transition: opacity 0.2s ease !important;
 }
 
 /* Perfect video fit in container */
-.html5-main-video.video-stream {
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid .html5-main-video.video-stream {
   width: 100% !important;
   height: 100% !important;
   object-fit: contain !important;
-  max-height: 100vh !important;
   position: relative !important;
   left: 0 !important;
   top: 0 !important;
 }
 
 /* Hide rich shelf headers */
-#rich-shelf-header,
-ytd-rich-shelf-renderer #rich-shelf-header,
-#rich-section-header,
-.ytd-rich-shelf-renderer #rich-shelf-header,
-ytd-rich-grid-renderer #rich-shelf-header {
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid #rich-shelf-header,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid ytd-rich-shelf-renderer #rich-shelf-header,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid #rich-section-header,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid .ytd-rich-shelf-renderer #rich-shelf-header,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid ytd-rich-grid-renderer #rich-shelf-header {
   display: none !important;
   visibility: hidden !important;
   height: 0 !important;
@@ -483,4 +515,19 @@ ytd-rich-grid-renderer #rich-shelf-header {
   margin: 0 !important;
   padding: 0 !important;
   overflow: hidden !important;
+}
+/* No scrollable dead strip at the edges of the player page.
+   The rounded/centered player must never leave an overflow you can scroll
+   into at the bottom-right of the page. */
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid {
+    overflow-x: hidden !important;
+}
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid ytd-app,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid ytd-watch-flexy,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-vid #contentContainer {
+    overflow-x: hidden !important;
+    max-width: 100vw !important;
+    max-width: 100dvw !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
 }

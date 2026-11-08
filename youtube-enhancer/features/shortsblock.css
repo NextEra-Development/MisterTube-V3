@@ -1,58 +1,103 @@
 /* Shorts Blocker Feature */
 
 /* Hide Shorts in sidebar */
-ytd-guide-entry-renderer[aria-label="Shorts"] {
+body.youtube-enhancer-enabled.youtube-enhancer-feature-sblock ytd-guide-entry-renderer[aria-label="Shorts"] {
   display: none !important;
 }
 
 /* Hide Shorts tab (3rd tab) */
-yt-tab-shape.yt-tab-shape-wiz--host-clickable.yt-tab-shape-wiz:nth-of-type(3) {
+body.youtube-enhancer-enabled.youtube-enhancer-feature-sblock yt-tab-shape.yt-tab-shape-wiz--host-clickable.yt-tab-shape-wiz:nth-of-type(3) {
   display: none !important;
 }
 
 /* Hide Shorts chip in the filter chips bar */
-yt-chip-cloud-chip-renderer[chip-style="STYLE_DEFAULT"][title="Shorts"] {
+body.youtube-enhancer-enabled.youtube-enhancer-feature-sblock yt-chip-cloud-chip-renderer[chip-style="STYLE_DEFAULT"][title="Shorts"] {
   display: none !important;
 }
 
 /* Hide Shorts shelf on homepage */
-ytd-rich-shelf-renderer[is-shorts] {
+body.youtube-enhancer-enabled.youtube-enhancer-feature-sblock ytd-rich-shelf-renderer[is-shorts] {
   display: none !important;
 }
 
+/* Homepage grid shelf (per user screenshot: bottom row is Shorts) */
+body.youtube-enhancer-enabled.youtube-enhancer-feature-sblock #contents-container > .ytd-rich-shelf-renderer.style-scope,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-sblock #contents-container ytd-rich-shelf-renderer:has(a[href*="/shorts/"]),
+body.youtube-enhancer-enabled.youtube-enhancer-feature-sblock #contentContainer ytd-rich-item-renderer:has(a[href*="/shorts/"]),
+body.youtube-enhancer-enabled.youtube-enhancer-feature-sblock ytd-rich-grid-renderer ytd-rich-item-renderer:has(a[href*="/shorts/"]) {
+  display: none !important;
+}
+
+/* Guide (left nav) — hide Shorts entry, collapse the leftover gap */
+body.youtube-enhancer-enabled.youtube-enhancer-feature-sblock #guide ytd-guide-entry-renderer[aria-label="Shorts"],
+body.youtube-enhancer-enabled.youtube-enhancer-feature-sblock #guide ytd-guide-entry-renderer:has(a[href="/feed/shorts"]),
+body.youtube-enhancer-enabled.youtube-enhancer-feature-sblock #guide ytd-guide-entry-renderer:has(#title[title="Shorts"]),
+body.youtube-enhancer-enabled.youtube-enhancer-feature-sblock #guide tp-yt-paper-item[aria-label="Shorts"],
+body.youtube-enhancer-enabled.youtube-enhancer-feature-sblock #guide a[href="/feed/shorts"] {
+  display: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  height: 0 !important;
+  min-height: 0 !important;
+}
+
+/* Homepage: remove the entire left nav (#guide) and collapse its gap.
+   YouTube offsets #contentContainer by the guide width; without this
+   the page keeps a 240px empty column. display:none alone leaves that. */
+body.youtube-enhancer-enabled.youtube-enhancer-feature-sblock #guide,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-sblock ytd-guide-renderer,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-sblock ytd-mini-guide-renderer {
+  display: none !important;
+  width: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+}
+
+body.youtube-enhancer-enabled.youtube-enhancer-feature-sblock #contentContainer {
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+}
+
+body.youtube-enhancer-enabled.youtube-enhancer-feature-sblock #page-wrapper.ytd-app,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-sblock #page-wrapper {
+  margin-left: 0 !important;
+}
+
 /* Hide Shorts in search results */
-ytd-video-renderer:has(a[href^="/shorts/"]) {
+body.youtube-enhancer-enabled.youtube-enhancer-feature-sblock ytd-video-renderer:has(a[href^="/shorts/"]) {
   display: none !important;
 }
 
 /* Hide the Shorts button in the main navigation */
-ytd-mini-guide-entry-renderer[aria-label="Shorts"],
-ytd-guide-entry-renderer[aria-label="Shorts"] {
+body.youtube-enhancer-enabled.youtube-enhancer-feature-sblock ytd-mini-guide-entry-renderer[aria-label="Shorts"],
+body.youtube-enhancer-enabled.youtube-enhancer-feature-sblock ytd-guide-entry-renderer[aria-label="Shorts"] {
   display: none !important;
 }
 
 /* Hide Shorts sections in recommendations */
-ytd-reel-shelf-renderer {
+body.youtube-enhancer-enabled.youtube-enhancer-feature-sblock ytd-reel-shelf-renderer {
   display: none !important;
 }
 
 /* Hide video thumbnail timestamps */
-ytd-thumbnail-overlay-time-status-renderer.ytd-thumbnail.style-scope {
+body.youtube-enhancer-enabled.youtube-enhancer-feature-sblock ytd-thumbnail-overlay-time-status-renderer.ytd-thumbnail.style-scope {
   display: none !important;
 }
 
 /* Hide rich sections in the grid (often contains shorts, ads or promoted content) */
-ytd-rich-section-renderer.ytd-rich-grid-renderer.style-scope {
+body.youtube-enhancer-enabled.youtube-enhancer-feature-sblock ytd-rich-section-renderer.ytd-rich-grid-renderer.style-scope {
   display: none !important;
 }
 
 /* Hide shorts player when accessed directly */
-ytd-shorts, ytd-reel-video-renderer {
+body.youtube-enhancer-enabled.youtube-enhancer-feature-sblock ytd-shorts, ytd-reel-video-renderer {
   display: none !important;
 }
 
 /* Show message instead */
-ytd-shorts:after {
+body.youtube-enhancer-enabled.youtube-enhancer-feature-sblock ytd-shorts:after {
   content: "Shorts have been blocked by YouTube Enhancer";
   display: flex;
   align-items: center;

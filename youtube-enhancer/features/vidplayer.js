@@ -6,7 +6,7 @@
     const config = {
         defaultVolume: 0.8,
         speedOptions: [0.5, 0.75, 1, 1.25, 1.5, 2],
-        defaultGridSize: 4  // Fixed default grid size
+        defaultGridSize: 4 // Legacy; grid is now auto-fit (responsive).
     };
 
     // State management
@@ -21,8 +21,15 @@
         speedVideo: null,
         onDocumentClick: null,
         onRateChange: null,
+        onPageDataUpdated: null,
         playerWaitCancelled: false
     };
+
+    // Gate the recommendations rail: visible only when a playlist is active.
+    function updatePlaylistClass() {
+        const hasPlaylist = new URLSearchParams(window.location.search).has('list');
+        document.body.classList.toggle('youtube-enhancer-has-playlist', hasPlaylist);
+    }
 
     // Initialize function that will be called when the feature is enabled
     function initialize() {
@@ -30,6 +37,20 @@
 
         console.log('YouTube Enhancer: Initializing video player improvements');
         state.playerWaitCancelled = false;
+
+        // Gate recommendations to playlist-only (vidplayer.css owns #secondary)
+        updatePlaylistClass();
+        state.onPageDataUpdated = () => updatePlaylistClass();
+        window.addEventListener('yt-page-data-updated', state.onPageDataUpdated);
+        window.addEventListener('popstate', state.onPageDataUpdated);
+        // yt-navigate-finish fires on every SPA transition (watch→watch, home→watch)
+        // and can beat yt-page-data-updated; document-level registration survives
+        // body swaps inside the YouTube app shell.
+        state.onNavigateFinish = () => {
+            clearTimeout(state.onNavigateFinishTimer);
+            state.onNavigateFinishTimer = setTimeout(() => updatePlaylistClass(), 100);
+        };
+        document.addEventListener('yt-navigate-finish', state.onNavigateFinish);
 
         // Apply clean UI
         applyCleanUI();
@@ -95,7 +116,7 @@
                 width: 100% !important;
                 height: 100% !important;
                 object-fit: contain !important;
-                max-height: 100vh !important;
+                max-height: 75vh !important;
                 position: relative !important;
                 left: 0 !important;
                 top: 0 !important;
@@ -116,12 +137,16 @@
         const gridStyle = document.createElement('style');
         gridStyle.id = 'youtube-enhancer-grid-layout';
         gridStyle.textContent = `
-            /* Set video grid to a reasonable default */
+            /* Responsive grid: size to the viewport so nothing clips the
+               right edge (was hard 4-col which cut cards at narrower widths). */
             ytd-rich-grid-renderer #contents.ytd-rich-grid-renderer {
                 display: grid !important;
-                grid-template-columns: repeat(${config.defaultGridSize}, 1fr) !important;
-                grid-gap: 16px !important;
-                padding: 16px !important;
+                grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)) !important;
+                grid-gap: 12px !important;
+                gap: 12px !important;
+                padding: 12px !important;
+                box-sizing: border-box !important;
+                max-width: 100% !important;
             }
 
             /* Video item sizing adjustments */
@@ -149,24 +174,7 @@
                 object-fit: cover !important;
             }
 
-            /* Responsive adjustments */
-            @media (max-width: 1200px) {
-                ytd-rich-grid-renderer #contents.ytd-rich-grid-renderer {
-                    grid-template-columns: repeat(3, 1fr) !important;
-                }
-            }
-
-            @media (max-width: 768px) {
-                ytd-rich-grid-renderer #contents.ytd-rich-grid-renderer {
-                    grid-template-columns: repeat(2, 1fr) !important;
-                }
-            }
-
-            @media (max-width: 480px) {
-                ytd-rich-grid-renderer #contents.ytd-rich-grid-renderer {
-                    grid-template-columns: repeat(1, 1fr) !important;
-                }
-            }
+            /* auto-fit handles all breakpoints — no fixed column counts. */
         `;
 
         document.head.appendChild(gridStyle);
@@ -475,6 +483,19 @@
 
         // Remove focus mode body class
         document.body.classList.remove('youtube-enhancer-focus-mode');
+        document.body.classList.remove('youtube-enhancer-has-playlist');
+        // Remove SPA navigation listeners
+        if (state.onPageDataUpdated) {
+            window.removeEventListener('yt-page-data-updated', state.onPageDataUpdated);
+            window.removeEventListener('popstate', state.onPageDataUpdated);
+            state.onPageDataUpdated = null;
+        }
+        if (state.onNavigateFinish) {
+            document.removeEventListener('yt-navigate-finish', state.onNavigateFinish);
+            state.onNavigateFinish = null;
+            clearTimeout(state.onNavigateFinishTimer);
+            state.onNavigateFinishTimer = null;
+        }
 
         // Reset state
         state.initialized = false;

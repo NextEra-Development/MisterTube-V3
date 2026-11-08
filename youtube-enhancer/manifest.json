@@ -9,6 +9,12 @@
     "activeTab",
     "tabs"
   ],
+  "host_permissions": [
+    "*://*.youtube.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
   "action": {
     "default_popup": "popup.html",
     "default_icon": "icons/icon48.png"
@@ -22,20 +28,26 @@
   "content_scripts": [
     {
       "matches": ["*://*.youtube.com/*"],
-      "js": ["content.js"],
+      "js": [
+        "features/vidplayer.js",
+        "features/subs-comment.js",
+        "features/shortsblock.js",
+        "features/thumbnails.js",
+        "content.js"
+      ],
+      "css": [
+        "features/vidplayer.css",
+        "features/subs-comment.css",
+        "features/shortsblock.css"
+      ],
       "run_at": "document_start"
     }
   ],
   "web_accessible_resources": [
     {
       "resources": [
-        "features/vidplayer.js",
         "features/vidplayer.css",
-        "features/shorts2long.js",
-        "features/shorts2long.css",
-        "features/subs-comment.js",
         "features/subs-comment.css",
-        "features/shortsblock.js",
         "features/shortsblock.css"
       ],
       "matches": ["*://*.youtube.com/*"]

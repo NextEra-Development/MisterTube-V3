@@ -1,110 +1,13 @@
-:root {
-    --spacing-xs: 4px;
-    --spacing-md: 16px;
-    --border-radius-sm: 4px;
-    --border-radius-md: 8px;
-    --feature-subscomment-bg: rgba(255, 255, 255, 0.05);
-    --feature-subscomment-pinned-border: #cc0000;
-}
-
-.subscriber-count {
-    font-size: 1.1rem;
-    line-height: normal;
-    color: var(--yt-text-secondary, #606060);
-    background-color: var(--yt-secondary, rgba(255, 255, 255, 0.1));
-    margin-left: var(--spacing-xs, 4px);
-    padding: 1px 3px;
-    border-radius: var(--border-radius-sm, 4px);
-}
-
-/* Subscriber count styles */
-.youtube-enhancer-subscriber-count {
-    padding: 6px 12px;
-    background: #fff;
-    border: 2px solid #cc0000;
-    border-radius: 8px;
-    font-size: 13px;
-    font-weight: 500;
-    color: #030303;
-    margin: 8px 0;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.youtube-enhancer-subscriber-count::before {
-    content: '▶️';
-    filter: grayscale(100%);
-    opacity: 0.7;
-}
-
-.youtube-enhancer-comments {
-    background: var(--feature-subscomment-bg, rgba(255, 255, 255, 0.05)) !important;
-    border-radius: var(--border-radius-md, 8px);
-    padding: var(--spacing-md, 16px) !important;
-    margin-top: 24px;
-}
-
-.youtube-enhancer-pinned-comment {
-    border-left: 3px solid var(--feature-subscomment-pinned-border, #cc0000) !important;
-    background: rgba(96, 245, 172, 0.1) !important;
-    padding-left: 12px;
-    margin-bottom: 16px;
-}
-
-/* YouTube Enhancer - Subscription & Comments Feature */
-
-/* Comment count display styles */
-.youtube-enhancer-comment-count {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 12px;
-    background-color: var(--yt-spec-badge-chip-background, rgba(255, 255, 255, 0.1));
-    border-radius: 18px;
-    margin-top: 8px;
-    font-size: 14px;
-    color: var(--yt-spec-text-primary, #fff);
-    transition: background-color 0.2s ease;
-}
-
-.youtube-enhancer-comment-count:hover {
-    background-color: var(--yt-spec-badge-chip-background-hover, rgba(255, 255, 255, 0.2));
-}
-
-.comment-count-icon {
-    font-size: 16px;
-}
-
-.comment-count-text {
-    font-weight: 500;
-}
-
-/* Dark mode adjustments */
-html[dark] .youtube-enhancer-comment-count {
-    background-color: var(--yt-spec-badge-chip-background, rgba(255, 255, 255, 0.1));
-}
-
-html[dark] .youtube-enhancer-comment-count:hover {
-    background-color: var(--yt-spec-badge-chip-background-hover, rgba(255, 255, 255, 0.2));
-}
-
-.youtube-enhancer-subscription {
-    background-color: var(--yt-spec-brand-button-background, #cc0000) !important;
-    color: var(--yt-spec-static-brand-white, #fff) !important;
-}
-
-/* Add to existing styles */
-.youtube-enhancer-subscription::after {
-    content: attr(data-sub-count);
-    display: inline-block;
-    margin-left: 8px;
-    padding: 2px 6px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 4px;
-    font-size: 0.9em;
-}
-
-.youtube-enhancer-subscription[aria-label*="Subscribed"]::after {
-    background: rgba(255, 255, 255, 0.2);
+/* Disable Comments (subsComment feature) — ON hides comments as a whole. */
+body.youtube-enhancer-enabled.youtube-enhancer-feature-subsComment #comments,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-subsComment ytd-comments#comments,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-subsComment ytd-comments,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-subsComment ytd-comments-header-renderer,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-subsComment ytd-comment-simplebox-renderer,
+body.youtube-enhancer-enabled.youtube-enhancer-feature-subsComment ytd-engagement-panel-section-list-renderer[target-id="comments-panel"] {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
 }

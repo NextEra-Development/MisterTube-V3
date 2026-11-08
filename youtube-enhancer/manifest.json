@@ -1,20 +1,23 @@
 {
   "manifest_version": 3,
   "name": "YouTube Enhancer",
-  "version": "1.0",
+  "version": "1.0.2",
   "description": "Enhances YouTube with additional features.",
   "permissions": [
     "storage",
     "scripting",
     "activeTab",
-    "webRequest"
+    "tabs"
   ],
-  "background": {
-    "service_worker": "feature-handlers.js"
-  },
   "action": {
     "default_popup": "popup.html",
     "default_icon": "icons/icon48.png"
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
   },
   "content_scripts": [
     {
@@ -32,13 +35,8 @@
         "features/shorts2long.css",
         "features/subs-comment.js",
         "features/subs-comment.css",
-        "features/subsbutton.js",
-        "features/subsbutton.css",
         "features/shortsblock.js",
-        "features/shortsblock.css",
-        "styles/variables.css",
-        "styles/responsive.css",
-        "styles/themes.css"
+        "features/shortsblock.css"
       ],
       "matches": ["*://*.youtube.com/*"]
     }

@@ -8,7 +8,6 @@
       vid: { js: 'features/vidplayer.js', css: 'features/vidplayer.css' },
       shorts2long: { js: 'features/shorts2long.js', css: 'features/shorts2long.css' },
       subsComment: { js: 'features/subs-comment.js', css: 'features/subs-comment.css' },
-      subsbutton: { js: 'features/subsbutton.js', css: 'features/subsbutton.css' },
       sblock: { js: 'features/shortsblock.js', css: 'features/shortsblock.css' }
     }
   };
@@ -17,21 +16,71 @@
   const injectedElements = {};
   const activeFeatureCleanups = {};
 
+  // Wait until document.head and document.body are available.
+  function waitForDocumentReady() {
+    return new Promise((resolve) => {
+      if (document.head && document.body) {
+        resolve();
+        return;
+      }
+      let settled = false;
+      const finish = () => {
+        if (settled) return;
+        settled = true;
+        clearInterval(intervalId);
+        resolve();
+      };
+      const check = () => {
+        if (document.head && document.body) {
+          finish();
+        }
+      };
+      // rAF does not fire in background/hidden tabs, so also poll on a timer.
+      const intervalId = setInterval(check, 50);
+      const rafCheck = () => {
+        check();
+        if (!settled) requestAnimationFrame(rafCheck);
+      };
+      requestAnimationFrame(rafCheck);
+      check();
+    });
+  }
+
+  // Feature scripts run in page context (no chrome.* APIs), so expose the
+  // current settings for them to read via window.youtubeEnhancerSettings.
+  async function injectSettings() {
+    const features = await chrome.storage.sync.get(Object.keys(CONFIG.FEATURE_FILES));
+    const featureStates = {};
+    Object.keys(CONFIG.FEATURE_FILES).forEach((feature) => {
+      featureStates[feature] = features[feature] !== false;
+    });
+    // Mutual exclusion: shorts2long and sblock cannot both run.
+    if (featureStates.shorts2long && featureStates.sblock) {
+      featureStates.sblock = false;
+    }
+    window.youtubeEnhancerSettings = {
+      extensionEnabled: isExtensionEnabled,
+      features: featureStates
+    };
+  }
+
   async function initialize() {
     console.log('Initializing content script');
-    await chrome.storage.sync.get(['extensionEnabled'], (result) => {
-      isExtensionEnabled = result.extensionEnabled !== false;
-      toggleExtensionFeatures(isExtensionEnabled);
-    });
+    await waitForDocumentReady();
 
-    await chrome.storage.sync.get(Object.keys(CONFIG.FEATURE_FILES), (features) => {
-      console.log('Feature states:', features);
-      Object.keys(CONFIG.FEATURE_FILES).forEach((feature) => {
-        if (features[feature] !== false) {
-          enableFeature(feature);
-        }
-      });
-    });
+    const extResult = await chrome.storage.sync.get(['extensionEnabled']);
+    isExtensionEnabled = extResult.extensionEnabled !== false;
+    await toggleExtensionFeatures(isExtensionEnabled);
+
+    const features = await chrome.storage.sync.get(Object.keys(CONFIG.FEATURE_FILES));
+    console.log('Feature states:', features);
+    // Mutual exclusion: prefer shorts2long when both are enabled in storage.
+    const bothShortsEnabled = features.shorts2long !== false && features.sblock !== false;
+    for (const feature of Object.keys(CONFIG.FEATURE_FILES)) {
+      if (features[feature] !== false && isExtensionEnabled && !(bothShortsEnabled && feature === 'sblock')) {
+        await enableFeature(feature);
+      }
+    }
 
     chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       if (message.action === 'ping') {
@@ -50,32 +99,41 @@
     });
   }
 
-  function handleToggleExtension(enabled) {
+  async function handleToggleExtension(enabled) {
     isExtensionEnabled = enabled;
-    toggleExtensionFeatures(enabled);
-    Object.keys(CONFIG.FEATURE_FILES).forEach((feature) => {
-      chrome.storage.sync.get([feature], (result) => {
-        if (result[feature] && isExtensionEnabled) {
-          enableFeature(feature);
-        } else {
-          disableFeature(feature);
-        }
-      });
-    });
+    await toggleExtensionFeatures(enabled);
+    const features = await chrome.storage.sync.get(Object.keys(CONFIG.FEATURE_FILES));
+    const bothShortsEnabled = features.shorts2long !== false && features.sblock !== false;
+    for (const feature of Object.keys(CONFIG.FEATURE_FILES)) {
+      if (features[feature] !== false && isExtensionEnabled && !(bothShortsEnabled && feature === 'sblock')) {
+        await enableFeature(feature);
+      } else {
+        await disableFeature(feature);
+      }
+    }
   }
 
-  function handleToggleFeature(feature, enabled) {
+  async function handleToggleFeature(feature, enabled) {
     if (enabled && isExtensionEnabled) {
-      enableFeature(feature);
+      // Mutual exclusion: enabling one shorts feature disables the other.
+      const conflictingFeature = feature === 'shorts2long' ? 'sblock'
+        : feature === 'sblock' ? 'shorts2long' : null;
+      if (conflictingFeature) {
+        await disableFeature(conflictingFeature);
+      }
+      await enableFeature(feature);
     } else {
-      disableFeature(feature);
+      await disableFeature(feature);
     }
   }
 
   async function enableFeature(feature) {
     if (!CONFIG.FEATURE_FILES[feature]) return;
+    if (activeFeatureCleanups[feature]) return;
     try {
-      injectCSS(feature);
+      await waitForDocumentReady();
+      await injectSettings();
+      await injectCSS(feature);
       await loadFeatureJS(feature);
       if (window.youtubeEnhancer?.[feature]?.init) {
         const cleanup = window.youtubeEnhancer[feature].init();
@@ -87,26 +145,43 @@
     }
   }
 
-  function disableFeature(feature) {
+  async function disableFeature(feature) {
     if (!CONFIG.FEATURE_FILES[feature]) return;
-    if (injectedElements[feature]) {
-      injectedElements[feature].remove();
-      delete injectedElements[feature];
-    }
     if (activeFeatureCleanups[feature]) {
-      activeFeatureCleanups[feature]();
+      try {
+        activeFeatureCleanups[feature]();
+      } catch (error) {
+        console.error(`Error cleaning up ${feature}:`, error);
+      }
       delete activeFeatureCleanups[feature];
     }
+    // Remove injected script/link elements so a later re-enable starts clean.
+    const css = injectedElements[feature]?.css || document.getElementById(`youtube-enhancer-${feature}-css`);
+    const js = injectedElements[feature]?.js || document.getElementById(`youtube-enhancer-${feature}-script`);
+    if (css) css.remove();
+    if (js) js.remove();
+    delete injectedElements[feature];
     console.log(`Disabled feature: ${feature}`);
   }
 
   function loadFeatureJS(feature) {
     return new Promise((resolve, reject) => {
+      const scriptId = `youtube-enhancer-${feature}-script`;
+      const existing = document.getElementById(scriptId);
+      if (existing) {
+        // Already injected; do not inject a duplicate.
+        injectedElements[feature] = injectedElements[feature] || {};
+        injectedElements[feature].js = existing;
+        resolve();
+        return;
+      }
       const script = document.createElement('script');
       script.src = chrome.runtime.getURL(CONFIG.FEATURE_FILES[feature].js);
-      script.id = `youtube-enhancer-${feature}-script`;
+      script.id = scriptId;
       script.onload = () => {
         console.log(`Loaded ${feature}.js`);
+        injectedElements[feature] = injectedElements[feature] || {};
+        injectedElements[feature].js = script;
         resolve();
       };
       script.onerror = () => reject(new Error(`Failed to load ${feature}.js`));
@@ -114,20 +189,28 @@
     });
   }
 
-  function injectCSS(feature) {
+  async function injectCSS(feature) {
+    await waitForDocumentReady();
     const existingLink = document.getElementById(`youtube-enhancer-${feature}-css`);
-    if (existingLink) existingLink.remove();
+    if (existingLink) {
+      injectedElements[feature] = injectedElements[feature] || {};
+      injectedElements[feature].css = existingLink;
+      return existingLink;
+    }
     const link = document.createElement('link');
     link.rel = 'stylesheet';
-    link.href = chrome.runtime.getURL(CONFIG.FEATURE_FILES[feature].css) + '?v=' + Date.now();
+    link.href = chrome.runtime.getURL(CONFIG.FEATURE_FILES[feature].css);
     link.id = `youtube-enhancer-${feature}-css`;
     link.onload = () => console.log(`CSS loaded for ${feature}`);
     link.onerror = () => console.error(`CSS failed to load for ${feature}`);
     document.head.appendChild(link);
-    injectedElements[feature] = link;
+    injectedElements[feature] = injectedElements[feature] || {};
+    injectedElements[feature].css = link;
+    return link;
   }
 
-  function toggleExtensionFeatures(enabled) {
+  async function toggleExtensionFeatures(enabled) {
+    await waitForDocumentReady();
     document.body.classList.toggle(CONFIG.CUSTOM_CLASS, enabled);
   }
 

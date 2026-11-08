@@ -1,22 +1,55 @@
+:root {
+    --spacing-xs: 4px;
+    --spacing-md: 16px;
+    --border-radius-sm: 4px;
+    --border-radius-md: 8px;
+    --feature-subscomment-bg: rgba(255, 255, 255, 0.05);
+    --feature-subscomment-pinned-border: #cc0000;
+}
+
 .subscriber-count {
     font-size: 1.1rem;
     line-height: normal;
-    color: var(--yt-text-secondary);
-    background-color: var(--yt-secondary);
-    margin-left: var(--spacing-xs);
+    color: var(--yt-text-secondary, #606060);
+    background-color: var(--yt-secondary, rgba(255, 255, 255, 0.1));
+    margin-left: var(--spacing-xs, 4px);
     padding: 1px 3px;
-    border-radius: var(--border-radius-sm);
+    border-radius: var(--border-radius-sm, 4px);
+}
+
+/* Subscriber count styles */
+.youtube-enhancer-subscriber-count {
+    padding: 6px 12px;
+    background: #fff;
+    border: 2px solid #cc0000;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #030303;
+    margin: 8px 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.youtube-enhancer-subscriber-count::before {
+    content: '▶️';
+    filter: grayscale(100%);
+    opacity: 0.7;
 }
 
 .youtube-enhancer-comments {
-    background: var(--feature-subscomment-bg) !important;
-    border-radius: var(--border-radius-md);
-    padding: var(--spacing-md) !important;
+    background: var(--feature-subscomment-bg, rgba(255, 255, 255, 0.05)) !important;
+    border-radius: var(--border-radius-md, 8px);
+    padding: var(--spacing-md, 16px) !important;
+    margin-top: 24px;
 }
 
 .youtube-enhancer-pinned-comment {
-    border-left: 3px solid var(--feature-subscomment-pinned-border) !important;
+    border-left: 3px solid var(--feature-subscomment-pinned-border, #cc0000) !important;
     background: rgba(96, 245, 172, 0.1) !important;
+    padding-left: 12px;
+    margin-bottom: 16px;
 }
 
 /* YouTube Enhancer - Subscription & Comments Feature */
@@ -54,17 +87,6 @@ html[dark] .youtube-enhancer-comment-count {
 
 html[dark] .youtube-enhancer-comment-count:hover {
     background-color: var(--yt-spec-badge-chip-background-hover, rgba(255, 255, 255, 0.2));
-}
-
-/* Existing styles */
-.youtube-enhancer-comments {
-    margin-top: 24px;
-}
-
-.youtube-enhancer-pinned-comment {
-    border-left: 3px solid var(--yt-spec-brand-button-background, #cc0000);
-    padding-left: 12px;
-    margin-bottom: 16px;
 }
 
 .youtube-enhancer-subscription {

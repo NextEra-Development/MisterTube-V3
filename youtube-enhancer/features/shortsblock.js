@@ -3,9 +3,14 @@
 (function() {
     'use strict';
 
+    // Store original History API methods for exact restoration in cleanup
+    const originalPushState = history.pushState;
+    const originalReplaceState = history.replaceState;
+    let wrapped = false;
+
     function init() {
         console.log('YouTube Enhancer: Initializing shortsblock feature');
-        
+
         // Add delay to ensure page state is ready
         setTimeout(() => {
             if (window.location.pathname.startsWith('/shorts/')) {
@@ -14,7 +19,7 @@
             }
             setupUrlChangeListener();
         }, 300); // 300ms delay to catch late redirects
-        
+
         return cleanup;
     }
 
@@ -30,10 +35,10 @@
             const redirectKey = `ytEnhancerShortsBlocked_${videoId}`;
             if (sessionStorage.getItem(redirectKey)) return;
             sessionStorage.setItem(redirectKey, Date.now().toString());
-            
+
             // Redirect to homepage
             const homeUrl = new URL('/', currentUrl.origin);
-            
+
             // Use history.replaceState for smoother transition
             history.replaceState(null, '', homeUrl.toString());
             // Force reload to ensure proper page rendering
@@ -45,9 +50,8 @@
 
     // Listen for URL changes to catch dynamic navigation to shorts
     function setupUrlChangeListener() {
-        // Use the History API to detect URL changes
-        const originalPushState = history.pushState;
-        const originalReplaceState = history.replaceState;
+        if (wrapped) return;
+        wrapped = true;
 
         // Override pushState
         history.pushState = function() {
@@ -77,20 +81,13 @@
     // Cleanup function for when feature is disabled
     function cleanup() {
         console.log('YouTube Enhancer: Cleaning up shortsblock feature');
-        // Restore original History API methods if they were modified
-        if (history.pushState.toString().includes('checkForShortsUrl')) {
-            history.pushState = originalPushState;
-        }
-        if (history.replaceState.toString().includes('checkForShortsUrl')) {
-            history.replaceState = originalReplaceState;
-        }
+        // Restore the exact original History API methods
+        history.pushState = originalPushState;
+        history.replaceState = originalReplaceState;
         // Remove event listener
         window.removeEventListener('popstate', checkForShortsUrl);
+        wrapped = false;
     }
-
-    // Store original methods for cleanup
-    const originalPushState = history.pushState;
-    const originalReplaceState = history.replaceState;
 
     // Register with YouTube Enhancer
     window.youtubeEnhancer = window.youtubeEnhancer || {};

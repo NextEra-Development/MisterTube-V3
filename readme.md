@@ -57,48 +57,33 @@ Contributions are welcome! If you'd like to help improve YouTube Enhancer:
 # Clone the repository
 git clone git@github.com:Prarambha369/YouTube_Enhancer.git
 
-# Navigate to the directory
+# Navigate to the extension directory
 cd youtube-enhancer
-
-# Install dependencies (if using npm)
-npm install
 ```
+
+No dependencies to install — load the `youtube-enhancer/` directory unpacked as described above.
 
 ## Code Structure
 
 ```
 youtube-enhancer/
 ├── manifest.json        # Extension configuration
-├── background.js        # Background service worker
 ├── content.js           # Main content script loader
 ├── popup.html           # Extension popup UI
 ├── popup.js             # Popup functionality
-├── feature-handlers.js  # Feature toggle handlers
+├── popup_styles.css     # Popup styles
 ├── features/            # Individual feature modules
 │   ├── vidplayer.js     # Enhanced video player
+│   ├── vidplayer.css    # Vidplayer styles
 │   ├── shorts2long.js   # Shorts to regular video converter
-│   └── shortsblock.js   # Shorts blocking functionality
-├── styles/              # CSS styles
-│   └── theme.css        # Main theme styles
+│   ├── shorts2long.css  # Shorts2long styles
+│   ├── shortsblock.js   # Shorts blocking functionality
+│   ├── shortsblock.css  # Shortsblock styles
+│   ├── subs-comment.js  # Subscriptions & comments enhancements
+│   └── subs-comment.css # Subs-comment styles
 └── icons/               # Extension icons
     ├── icon16.png
-    ├── icon48.png
-    └── icon128.png
-```
-├── manifest.json        # Extension configuration
-├── background.js        # Background service worker
-├── content.js           # Main content script loader
-├── popup.html           # Extension popup UI
-├── popup.js             # Popup functionality
-├── feature-handlers.js  # Feature toggle handlers
-├── features/            # Individual feature modules
-│   ├── vidplayer.js     # Enhanced video player
-│   ├── shorts2long.js   # Shorts to regular video converter
-│   └── shortsblock.js   # Shorts blocking functionality
-├── styles/              # CSS styles
-│   └── theme.css        # Main theme styles
-└── icons/               # Extension icons
-    ├── icon16.png
+    ├── icon32.png
     ├── icon48.png
     └── icon128.png
 ```
@@ -106,17 +91,12 @@ youtube-enhancer/
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Acknowledgments
 
 - Thanks to all contributors who have helped improve this extension
 - Inspired by various YouTube enhancement tools in the open-source community
-- Thanks to all contributors who have helped improve this extension
-- Inspired by various YouTube enhancement tools in the open-source community
 
 ---
----
 
-**Made with ❤️ by Prarambha**
 **Made with ❤️ by Prarambha**

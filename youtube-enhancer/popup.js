@@ -6,8 +6,7 @@ const CONFIG = {
         "vid",
         "shorts2long",
         "subsComment",
-        "sblock",
-        "subsbutton"
+        "sblock"
     ]
 };
 
@@ -43,21 +42,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 toggle.disabled = !isExtensionEnabled;
             });
         });
-    }
-
-    // Function to reload the current YouTube tab
-    async function reloadYouTubeTab() {
-        try {
-            const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-            const tab = tabs[0];
-            if (tab?.url?.match(/^https?:\/\/(www\.)?youtube\.com/)) {
-                await chrome.tabs.reload(tab.id);
-                updateStatus(statusText, 'Reloading page...', 'processing');
-            }
-        } catch (error) {
-            console.error('Error reloading tab:', error);
-            updateStatus(statusText, 'Error reloading page', 'error');
-        }
     }
 
     // Function to check if content script is loaded
@@ -132,6 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
         toggle.addEventListener('change', async (e) => {
             if (isProcessingAction) return;
             isProcessingAction = true;
+            try {
 
             const feature = e.target.dataset.feature;
             const isEnabled = e.target.checked;
@@ -140,16 +125,43 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const storageUpdate = {};
             storageUpdate[feature] = isEnabled;
+
+            // Mutual exclusion: shorts2long and sblock cannot both be enabled
+            const conflictingFeature = feature === 'shorts2long' ? 'sblock'
+                : feature === 'sblock' ? 'shorts2long' : null;
+            let conflictDisabled = false;
+            if (isEnabled && conflictingFeature) {
+                storageUpdate[conflictingFeature] = false;
+                conflictDisabled = true;
+            }
+
             await chrome.storage.sync.set(storageUpdate);
+
+            if (conflictDisabled) {
+                const conflictToggle = document.querySelector(`.feature-toggle[data-feature="${conflictingFeature}"]`);
+                if (conflictToggle) conflictToggle.checked = false;
+            }
 
             // Send message to content script with error handling
             const tabs = await chrome.tabs.query({ url: '*://*.youtube.com/*' });
             for (const tab of tabs) {
-                await sendMessageToContentScript(tab.id, {
-                    action: 'toggleFeature',
-                    feature: feature,
-                    enabled: isEnabled
-                });
+                try {
+                    await sendMessageToContentScript(tab.id, {
+                        action: 'toggleFeature',
+                        feature: feature,
+                        enabled: isEnabled
+                    });
+                    if (conflictDisabled) {
+                        await sendMessageToContentScript(tab.id, {
+                            action: 'toggleFeature',
+                            feature: conflictingFeature,
+                            enabled: false
+                        });
+                    }
+                } catch (tabError) {
+                    console.warn(`Failed to update tab ${tab.id}:`, tabError);
+                    continue;
+                }
             }
 
             const featureName = document.querySelector(`.feature-card.${feature} .feature-title`)?.textContent || feature;
@@ -159,9 +171,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 'success'
             );
 
-            // Reload the page after a short delay
-            setTimeout(reloadYouTubeTab, 500);
-
             setTimeout(() => {
                 updateStatus(
                     statusText,
@@ -170,7 +179,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 );
             }, CONFIG.STATUS_UPDATE_DELAY);
 
-            isProcessingAction = false;
+            } finally {
+                isProcessingAction = false;
+            }
         });
     });
 
@@ -178,6 +189,7 @@ document.addEventListener('DOMContentLoaded', () => {
     toggle.addEventListener('change', async () => {
         if (isProcessingAction) return;
         isProcessingAction = true;
+        try {
 
         const isEnabled = toggle.checked;
         applyPulseAnimation(container);
@@ -199,16 +211,20 @@ document.addEventListener('DOMContentLoaded', () => {
         // Send message to content script with error handling
         const tabs = await chrome.tabs.query({ url: '*://*.youtube.com/*' });
         for (const tab of tabs) {
-            await sendMessageToContentScript(tab.id, { 
-                action: 'toggleExtension', 
-                enabled: isEnabled 
-            });
+            try {
+                await sendMessageToContentScript(tab.id, {
+                    action: 'toggleExtension',
+                    enabled: isEnabled
+                });
+            } catch (tabError) {
+                console.warn(`Failed to update tab ${tab.id}:`, tabError);
+                continue;
+            }
         }
 
-        // Reload the page after a short delay
-        setTimeout(reloadYouTubeTab, 500);
-
-        isProcessingAction = false;
+        } finally {
+            isProcessingAction = false;
+        }
     });
 
     checkYouTubeTab()

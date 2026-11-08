@@ -1,1 +1,5 @@
-.idea
+.idea/
+.DS_Store
+Thumbs.db
+*.zip
+node_modules/
